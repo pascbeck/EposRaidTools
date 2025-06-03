@@ -19,7 +19,14 @@ EposRaidTools.lua
 EventHandler.lua
 
 # UI
+# Roster
 UI/Roster/TrackingOptions.lua
 UI/Roster/Blacklist.lua
 UI/Roster/RosterUI.lua
+
+# Crests
+UI/Crests/CrestsOptions.lua
+UI/Crests/CrestsUI.lua
+
+# Main UI
 UI/EposUI.lua

@@ -75,6 +75,26 @@ function BuildTrackingOptions()
         nocombat = true,
     })
 
+    table.insert(options, { type = "break" })
+    table.insert(options, {
+        type          = "label",
+        get           = function() return "Blacklist & Whitelist" end,
+        text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+    })
+
+    -- Insert “Edit Blacklist” as a menu‐button:
+    table.insert(options, {
+        type = "execute",
+        name = "Edit Blacklist",
+        desc = "Manually add players to the tracking blacklist",
+        func = function()
+            if EposUI and EposUI.blacklist_frame then
+                EposUI.database_options:Hide()
+                EposUI.blacklist_frame:Show()
+            end
+        end,
+    })
+
     DF:BuildMenu(
         tracking_options_frame,
         options,

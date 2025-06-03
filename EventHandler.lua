@@ -27,6 +27,7 @@ function Epos:EventHandler(e, wowevent, internal, ...)
             if not EposRT.GuildRoster       then EposRT.GuildRoster = {} end
             if not EposRT.PlayerDatabase    then EposRT.PlayerDatabase = {} end
             if not EposRT.Blacklist         then EposRT.Blacklist = {} end
+            if not EposRT.CrestsOptions     then EposRT.CrestsOptions = {} end
 
             local AceComm = LibStub("AceComm-3.0", true)
             if AceComm then
@@ -36,11 +37,20 @@ function Epos:EventHandler(e, wowevent, internal, ...)
                     if not LD or not LS then return end
 
                     local decoded = LD:DecodeForWoWAddonChannel(encoded)
-                    if not decoded      then return end
+                    if not decoded      then
+                        print("not decoded")
+                        return
+                    end
                     local decompressed = LD:DecompressDeflate(decoded)
-                    if not decompressed then return end
+                    if not decompressed then
+                        print("not decompressed")
+                        return
+                    end
                     local ok, payload  = LS:Deserialize(decompressed)
-                    if not ok           then return end
+                    if not ok           then
+                        print("is not ok")
+                        return
+                    end
 
                     Epos:EventHandler("EPOSDATABASE", false, true, payload, sender)
                 end)
@@ -58,6 +68,8 @@ function Epos:EventHandler(e, wowevent, internal, ...)
                         ["Raid Alt"]    = false,
                         ["Trial"]       = false,
                     }
+
+            EposRT.CrestsOptions["fetch"] = EposRT.CrestsOptions["fetch"] or 3114
         end
 
     elseif e == "PLAYER_LOGIN" and wowevent then

@@ -1,7 +1,7 @@
 local _, Epos = ...
 local DF  = _G["DetailsFramework"]
 
-function BuildRosterTab(parent)
+function BuildCrestsTab(parent)
     local buttonWidth = 120
     local buttonHeight = 20
     local spacingX = 10
@@ -24,19 +24,19 @@ function BuildRosterTab(parent)
     requestDataButton:SetAlpha(1)
     requestDataButton.tooltip = "Request data from current selected players"
 
-    -- “Options” (EditRoles) now sits immediately to the left of “Edit Blacklist”
-    local editRolesButton = DF:CreateButton(
+    -- “Edit Blacklist” stays at far‐right
+    local blacklistButton = DF:CreateButton(
         parent,
-        function() EposUI.database_options:Show() end,
+        function() EposUI.crests_options:Show() end,
         buttonWidth,
         buttonHeight,
-        "Roster Options",
+        "Crests Options",
         nil, nil, nil, nil, nil, nil,
         Epos.Constants.templates.button
     )
-    editRolesButton:SetPoint("TOPLEFT", parent, "TOPLEFT", leftPadding, startY)
-    editRolesButton:SetAlpha(1)
-    editRolesButton.tooltip = "Configure role filters for automatic tracking"
+    blacklistButton:SetPoint("TOPLEFT", parent, "TOPLEFT", leftPadding, startY)
+    blacklistButton:SetAlpha(1)
+    blacklistButton.tooltip = "Manually add players to the tracking blacklist"
 
     -- Create header frame for column titles
     local headerHeight = 20
@@ -52,17 +52,25 @@ function BuildRosterTab(parent)
     header.nameLabel:SetPoint("LEFT", header, "LEFT", 5, 0)
     header.nameLabel:SetTextColor(headerColorR, headerColorG, headerColorB)
 
-    header.rankLabel = DF:CreateLabel(header, "Rank")
-    header.rankLabel:SetPoint("LEFT", header, "LEFT", 185, 0)
-    header.rankLabel:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.crestsAvailable = DF:CreateLabel(header, "Available")
+    header.crestsAvailable:SetPoint("LEFT", header, "LEFT", 185, 0)
+    header.crestsAvailable:SetTextColor(headerColorR, headerColorG, headerColorB)
 
-    header.statusLabel = DF:CreateLabel(header, "Status")
-    header.statusLabel:SetPoint("LEFT", header, "LEFT", 300, 0)
-    header.statusLabel:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.crestsObtainable = DF:CreateLabel(header, "Obtainable")
+    header.crestsObtainable:SetPoint("LEFT", header, "LEFT", 300, 0)
+    header.crestsObtainable:SetTextColor(headerColorR, headerColorG, headerColorB)
 
-    header.updatedLabel = DF:CreateLabel(header, "Updated")
-    header.updatedLabel:SetPoint("LEFT", header, "LEFT", 425, 0)
-    header.updatedLabel:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.crestsUsed = DF:CreateLabel(header, "Used")
+    header.crestsUsed:SetPoint("LEFT", header, "LEFT", 425, 0)
+    header.crestsUsed:SetTextColor(headerColorR, headerColorG, headerColorB)
+
+    header.crestsTotalEarned = DF:CreateLabel(header, "Total Earned")
+    header.crestsTotalEarned:SetPoint("LEFT", header, "LEFT", 525, 0)
+    header.crestsTotalEarned:SetTextColor(headerColorR, headerColorG, headerColorB)
+
+    header.updated = DF:CreateLabel(header, "Updated")
+    header.updated:SetPoint("LEFT", header, "LEFT", 650, 0)
+    header.updated:SetTextColor(headerColorR, headerColorG, headerColorB)
 
     -- Refresh function for each data line
     local function refresh(self, data, offset, totalLines)
@@ -78,19 +86,11 @@ function BuildRosterTab(parent)
                 line.name:SetText(nickData.name)
                 line.name:SetTextColor(classColor.r, classColor.g, classColor.b)
 
-                line.rank:SetText(nickData.rank)
-                line.rank:SetTextColor(1, 1, 1)
-
-                line.trackingStatus:SetText("not in Database")
-                line.trackingStatus:SetTextColor(1, 0, 0)
-
-                if EposRT.PlayerDatabase[nickData.name] then
-                    line.trackingStatus:SetText("in Database")
-                    line.trackingStatus:SetTextColor(0, 1, 0)
-                end
-
-                line.updated:SetText(nickData.updated)
-                line.updated:SetTextColor(1, 1, 1)
+                line.crestsAvailable:SetText(nickData.crestsAvailable)
+                line.crestsObtainable:SetText(nickData.crestsObtainable)
+                line.crestsUsed:SetText(nickData.crestsUsed)
+                line.crestsTotalEarned:SetText(nickData.crestsTotalEarned)
+                line.updated:SetText("321")
             end
         end
     end
@@ -101,15 +101,30 @@ function BuildRosterTab(parent)
         local trackedRoles = EposRT.Settings and EposRT.Settings.TrackedRoles or {}
 
         for _, player in ipairs(EposRT.GuildRoster) do
-            local databasePlayer = EposRT.PlayerDatabase[player.name]
-            if trackedRoles[player.rank] and not EposRT.Blacklist[player.name] then
-                table.insert(data, {
-                    name    = player.name,
-                    rank    = player.rank,
-                    class   = player.class,
-                    updated = databasePlayer and date("%Y-%m-%d %H:%M:%S", databasePlayer.timestamp) or "-"
-                })
+            local db = EposRT.PlayerDatabase[player.name]
+
+            if db then
+                local currency = db.currency
+
+                local useTotalEarnedForMaxQty = currency.useTotalEarnedForMaxQty
+
+                local crestsAvailable   = currency.quantity
+                local crestsObtainable  = currency.canEarnPerWeek and (currency.maxQuantity - currency.totalEarned) or "Infinite"
+                local crestsUsed        = currency.totalEarned - currency.quantity
+                local crestsTotalEarned = currency.totalEarned
+
+
+                if trackedRoles[player.rank] and not EposRT.Blacklist[player.name] then
+                    table.insert(data, {
+                        name                = player.name,
+                        crestsAvailable     = crestsAvailable,
+                        crestsObtainable    = crestsObtainable,
+                        crestsUsed          = crestsUsed,
+                        crestsTotalEarned   = crestsTotalEarned,
+                    })
+                end
             end
+
         end
 
         table.sort(data, function(a, b)
@@ -135,14 +150,20 @@ function BuildRosterTab(parent)
         line.name = DF:CreateLabel(line, "")
         line.name:SetPoint("LEFT", line, "LEFT", 5, 0)
 
-        line.rank = DF:CreateLabel(line, "")
-        line.rank:SetPoint("LEFT", line, "LEFT", 185, 0)
+        line.crestsAvailable = DF:CreateLabel(line, "")
+        line.crestsAvailable:SetPoint("LEFT", line, "LEFT", 185, 0)
 
-        line.trackingStatus = DF:CreateLabel(line, "")
-        line.trackingStatus:SetPoint("LEFT", line, "LEFT", 300, 0)
+        line.crestsObtainable = DF:CreateLabel(line, "")
+        line.crestsObtainable:SetPoint("LEFT", line, "LEFT", 300, 0)
+
+        line.crestsUsed = DF:CreateLabel(line, "")
+        line.crestsUsed:SetPoint("LEFT", line, "LEFT", 425, 0)
+
+        line.crestsTotalEarned = DF:CreateLabel(line, "")
+        line.crestsTotalEarned:SetPoint("LEFT", line, "LEFT", 525, 0)
 
         line.updated = DF:CreateLabel(line, "")
-        line.updated:SetPoint("LEFT", line, "LEFT", 425, 0)
+        line.updated:SetPoint("LEFT", line, "LEFT", 650, 0)
 
         return line
     end
@@ -152,7 +173,7 @@ function BuildRosterTab(parent)
     local totalHeight = Epos.Constants.window_height - 180
     local visibleRows = math.floor(totalHeight / lineHeight)
 
-    local roster_scrollbox =
+    local crests_scrollbox =
         DF:CreateScrollBox(
             parent,
             "VersionCheckScrollBox",
@@ -164,22 +185,22 @@ function BuildRosterTab(parent)
             lineHeight,
             createLineFunc
         )
-    parent.scrollbox        	   = roster_scrollbox
-    roster_scrollbox.MasterRefresh = MasterRefresh
+    parent.scrollbox        	   = crests_scrollbox
+    crests_scrollbox.MasterRefresh = MasterRefresh
 
-    DF:ReskinSlider(roster_scrollbox)
-    roster_scrollbox.ReajustNumFrames = true
+    DF:ReskinSlider(crests_scrollbox)
+    crests_scrollbox.ReajustNumFrames = true
     -- moved scrollbox up by 5 pixels as well (startY - 55 instead of startY - 60)
-    roster_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, startY - 55)
+    crests_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, startY - 55)
 
     -- create exactly as many line frames as will fit on screen
     for i = 1, visibleRows do
-        roster_scrollbox:CreateLine(createLineFunc)
+        crests_scrollbox:CreateLine(createLineFunc)
     end
 
-    roster_scrollbox:SetScript("OnShow", function(self)
-        EposUI.roster_tab:MasterRefresh()
+    crests_scrollbox:SetScript("OnShow", function(self)
+        EposUI.crests_tab:MasterRefresh()
     end)
 
-    return roster_scrollbox
+    return crests_scrollbox
 end

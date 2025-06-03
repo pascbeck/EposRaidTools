@@ -22,8 +22,8 @@ function EposUI:Init()
     -- Create the tab container
     local tabContainer = DF:CreateTabContainer(EposUI, "Epos", "EposUI_Tab", {
         {
-			name 		= "Roster",
-			text 		= "Roster"
+			name 		= "Database",
+			text 		= "Database"
 		},
         {
 			name 		= "Crests",
@@ -54,7 +54,7 @@ function EposUI:Init()
 
 	tabContainer:SetPoint("CENTER", EposUI, "CENTER", 0, 0)
 
-	local roster_tab 			= tabContainer:GetTabFrameByName("Roster")
+	local roster_tab 			= tabContainer:GetTabFrameByName("Database")
     local crests_tab 			= tabContainer:GetTabFrameByName("Crests")
     local weakauras_tab 		= tabContainer:GetTabFrameByName("WeakAuras")
     local addons_tab 			= tabContainer:GetTabFrameByName("AddOns")
@@ -95,10 +95,6 @@ function EposUI:Init()
         }
     }
 
-	-- crests
-    DF:BuildMenu(crests_tab, {}, 10, -100, Epos.Constants.window_height - 10, false, Epos.Constants.templates.text,
-        Epos.Constants.templates.dropdown, Epos.Constants.templates.switch, true, Epos.Constants.templates.slider, Epos.Constants.templates.button,
-        nil)
 	-- weakauras
     DF:BuildMenu(weakauras_tab, {}, 10, -100, Epos.Constants.window_height - 10, false, Epos.Constants.templates.text,
         Epos.Constants.templates.dropdown, Epos.Constants.templates.switch, true, Epos.Constants.templates.slider, Epos.Constants.templates.button,
@@ -118,8 +114,12 @@ function EposUI:Init()
 
 	-- Build roster UI
     EposUI.roster_tab  		 = BuildRosterTab(roster_tab)
-    EposUI.edit_roles_frame  = BuildTrackingOptions()
+    EposUI.database_options  = BuildTrackingOptions()
 	EposUI.blacklist_frame 	 = BuildBlacklistUI()
+
+	-- Build crest UI
+    EposUI.crests_tab  		 = BuildCrestsTab(crests_tab)
+    EposUI.crests_options    = BuildCrestsOptions()
 
 	-- Version Number in status bar
     local versionTitle = C_AddOns.GetAddOnMetadata("EposRaidTools", "Title")
