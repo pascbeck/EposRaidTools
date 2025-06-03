@@ -1,5 +1,6 @@
 local _, Epos = ...
 local f = CreateFrame("Frame")
+
 f:RegisterEvent("ENCOUNTER_START")
 f:RegisterEvent("ENCOUNTER_END")
 f:RegisterEvent("UNIT_AURA")
@@ -15,33 +16,67 @@ f:SetScript("OnEvent", function(self, e, ...)
 end)
 
 function Epos:EventHandler(e, wowevent, internal, ...)
+    print(e)
+
     if e == "ADDON_LOADED" and wowevent then
         local name = ...
-        if name == "EposRaidTools" 	then
-			if not EposRT 			then EposRT = {} end
-			if not EposRT.EposUI 	then EposRT.EposUI = {scale = 1} end
-			if not EposRT.Settings 	then EposRT.Settings = {} end
-			if not EposRT.Members 	then EposRT.Members = {} end
-			
-			
-			EposRT.Settings["Minimap"] = EposRT.Settings["Minimap"] or { hide = false }
-			EposRT.Settings["VersionCheckRemoveResponse"] = EposRT.Settings["VersionCheckRemoveResponse"] or false
-			
-			EposRT.Settings["TrackedRoles"] = EposRT.Settings["TrackedRoles"] or {
-				["Guildlead"] = true,
-				["Officer"] = true,
-				["Officer Alt"] = false,
-				["Raider"] = true,
-				["Raid Alt"] = false,
-				["Trial"] = false,
-			}
+        if name == "EposRaidTools" then
+            if not EposRT                   then EposRT            = {} end
+            if not EposRT.EposUI            then EposRT.EposUI     = { scale = 1 } end
+            if not EposRT.Settings          then EposRT.Settings   = {} end
+            if not EposRT.GuildRoster       then EposRT.GuildRoster = {} end
+            if not EposRT.PlayerDatabase    then EposRT.PlayerDatabase = {} end
+            if not EposRT.Blacklist         then EposRT.Blacklist = {} end
 
+            local AceComm = LibStub("AceComm-3.0", true)
+            if AceComm then
+                AceComm:RegisterComm("EPOSDATABASE", function(prefix, encoded, distribution, sender)
+                    local LD = LibStub("LibDeflate", true)
+                    local LS = LibStub("LibSerialize", true)
+                    if not LD or not LS then return end
+
+                    local decoded = LD:DecodeForWoWAddonChannel(encoded)
+                    if not decoded      then return end
+                    local decompressed = LD:DecompressDeflate(decoded)
+                    if not decompressed then return end
+                    local ok, payload  = LS:Deserialize(decompressed)
+                    if not ok           then return end
+
+                    Epos:EventHandler("EPOSDATABASE", false, true, payload, sender)
+                end)
+            end
+
+            EposRT.Settings["Minimap"]                      = EposRT.Settings["Minimap"] or { hide = false }
+            EposRT.Settings["VersionCheckRemoveResponse"]   = EposRT.Settings["VersionCheckRemoveResponse"] or false
+
+            EposRT.Settings["TrackedRoles"]
+                = EposRT.Settings["TrackedRoles"] or {
+                        ["Guildlead"]   = true,
+                        ["Officer"]     = true,
+                        ["Officer Alt"] = false,
+                        ["Raider"]      = true,
+                        ["Raid Alt"]    = false,
+                        ["Trial"]       = false,
+                    }
         end
+
     elseif e == "PLAYER_LOGIN" and wowevent then
         Epos.EposUI:Init()
         Epos:InitLDB()
-	elseif e == "GUILD_ROSTER_UPDATE" and wowevent then
-		print("fetch guild")
+
+    elseif e == "GUILD_ROSTER_UPDATE" and wowevent then
         Epos:fetchGuild()
-	end
+
+    elseif e == "EPOSDATABASE" and internal then
+        local payload, sender = ...
+        if sender == "Bluupriest" then
+            EposRT.PlayerDatabase[payload.name] = payload
+            EposUI.roster_tab:MasterRefresh()
+        end
+
+        if sender == "Bluutotem" then
+            EposRT.PlayerDatabase[payload.name] = payload
+            EposUI.roster_tab:MasterRefresh()
+        end
+    end
 end

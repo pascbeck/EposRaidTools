@@ -7,15 +7,19 @@ local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 
 
 function Epos:fetchGuild()
-	EposRT.Members = {}
+	EposRT.GuildRoster = {} -- clear db
+	local maxLevel = GetMaxLevelForLatestExpansion()
 	for i = 1, GetNumGuildMembers() do
         local fullName, rank, _, level, _, _, _, _, _, _, classFile = GetGuildRosterInfo(i)
-        table.insert(EposRT.Members, {
-            name = fullName,
-            rank = rank,
-            level = level,
-            class = classFile
-        })
+
+        if (level == maxLevel) then
+            table.insert(EposRT.GuildRoster, {
+                name = fullName,
+                rank = rank,
+                level = level,
+                class = classFile
+            })
+        end
 	end
 end
 

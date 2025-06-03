@@ -1,20 +1,25 @@
 ## Interface: 110150
-
-## Title: |cFF00FFFFEpos Raid Tools|r
-## Version: 0.1.3
+## Title:    Epos Raid Tools
+## Version:  0.1.3
 ## IconTexture: Interface\AddOns\EposRaidTools\Media\EposLogo.blp
-## Author: Bluu
+## Author:   Bluu
 ## DefaultState: Enable
 ## Dependencies: WeakAuras
 ## SavedVariables: EposRT
 ## Category: Epos
 
 # Libraries
-Libs\libs.xml
+Libs/libs.xml
+
+# Constants
+constants.lua
 
 # Main Files
 EposRaidTools.lua
 EventHandler.lua
 
 # UI
-EposUI.lua
+UI/Roster/TrackingOptions.lua
+UI/Roster/Blacklist.lua
+UI/Roster/RosterUI.lua
+UI/EposUI.lua
