@@ -1,0 +1,36 @@
+tag 50cfdf927ca2eb9d031e2f905d7eb66dbe0ab5bf v11.1.0.591
+Author:	Tercio Jose <terciob19@hotmail.com>
+Date:	Fri Feb 28 11:53:40 2025 -0300
+
+commit dd48e3c0a31b78d57fa9d8e67f689f9066845462
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Fri Feb 28 11:53:23 2025 -0300
+
+    Dump Version
+
+commit 82be1859d98dc04af7ba868f170fd7b240b5eacf
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Fri Feb 28 11:53:07 2025 -0300
+
+    Button definitions
+
+commit b9d6cf7c737ce2d054e3b7eddb3de2e00b73056d
+Author: Lynn <kjarli@gmail.com>
+Date:   Fri Feb 28 08:42:11 2025 +0100
+
+    Don't set textures if the texture string is "" (#18)
+
+commit 8509b8e88537c10f9fd0638662f6a0e62c782fe3
+Author: cont1nuity <continuity@gmx.net>
+Date:   Thu Feb 27 23:44:46 2025 +0100
+
+    - found in plater
+
+commit 86f76cc2f4fa736e4ae36584cc20d55046b0b842
+Author: cont1nuity <continuity@gmx.net>
+Date:   Thu Feb 27 23:44:34 2025 +0100
+
+    - set an empty texture as default
+    
+    Setting empty string apparently leads to green textures on some machines under unknown conditions...
+
