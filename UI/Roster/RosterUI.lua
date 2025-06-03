@@ -18,7 +18,7 @@ function BuildRosterTab(parent)
         buttonHeight,
         "Request Data",
         nil, nil, nil, nil, nil, nil,
-        options_button_template
+        Epos.Constants.templates.button
     )
     requestDataButton:SetPoint("TOPLEFT", parent, "TOPLEFT", leftPadding, startY)
     requestDataButton:SetAlpha(1)
@@ -32,7 +32,7 @@ function BuildRosterTab(parent)
         buttonHeight,
         "Edit Blacklist",
         nil, nil, nil, nil, nil, nil,
-        options_button_template
+        Epos.Constants.templates.button
     )
     blacklistButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", rightPadding, startY)
     blacklistButton:SetAlpha(1)
@@ -46,7 +46,7 @@ function BuildRosterTab(parent)
         buttonHeight,
         "Options",
         nil, nil, nil, nil, nil, nil,
-        options_button_template
+        Epos.Constants.templates.button
     )
     editRolesButton:SetPoint("RIGHT", blacklistButton, "LEFT", -spacingX, 0)
     editRolesButton:SetAlpha(1)
