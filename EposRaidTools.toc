@@ -16,7 +16,7 @@ constants.lua
 
 # Main Files
 EposRaidTools.lua
-EventHandler.lua
+EposEvents.lua
 
 # UI
 # Roster
