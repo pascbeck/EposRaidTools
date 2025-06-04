@@ -3,29 +3,23 @@ local _, Epos = ...
 local DF = _G["DetailsFramework"]
 
 function BuildRosterTab(parent)
-    --- Constants (UI layout and sizing)
-    local buttonWidth  = 120
-    local buttonHeight = 20
-    local spacingX     = 10
-    local topPadding   = -20
-    local leftPadding  = 10
-    local rightPadding = -30
-    local startY       = -100
+    --- Shortcut to our constants table
+    local C = Epos.Constants
 
     --- Buttons
 
     -- "Request Data" Button (far right)
     local requestDataButton = DF:CreateButton(
         parent,
-        OnClick_EditWhitelist,   -- click handler
-        buttonWidth,
-        buttonHeight,
-        "Request Data",          -- button text
-        nil, nil, nil,           -- unused padding/anchor arguments
-        nil, nil, nil,           -- unused padding/anchor arguments
-        Epos.Constants.templates.button
+        OnClick_EditWhitelist,             -- click handler
+        C.tabs.buttonWidth,
+        C.tabs.buttonHeight,
+        "Request Data",                     -- button text
+        nil, nil, nil,                      -- unused padding/anchor arguments
+        nil, nil, nil,                      -- unused padding/anchor arguments
+        C.templates.button
     )
-    requestDataButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", rightPadding, startY)
+    requestDataButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", C.tabs.rightPadding, C.tabs.startY)
     requestDataButton:SetAlpha(1)
     requestDataButton.tooltip = "Request data from current selected players"
 
@@ -33,26 +27,25 @@ function BuildRosterTab(parent)
     local editRolesButton = DF:CreateButton(
         parent,
         function() EposUI.database_options:Show() end,  -- click handler to show options
-        buttonWidth,
-        buttonHeight,
-        "Roster Options",       -- button text
-        nil, nil, nil,          -- unused padding/anchor arguments
-        nil, nil, nil,          -- unused padding/anchor arguments
-        Epos.Constants.templates.button
+        C.tabs.buttonWidth,
+        C.tabs.buttonHeight,
+        "Roster Options",                    -- button text
+        nil, nil, nil,                       -- unused padding/anchor arguments
+        nil, nil, nil,                       -- unused padding/anchor arguments
+        C.templates.button
     )
-    editRolesButton:SetPoint("TOPLEFT", parent, "TOPLEFT", leftPadding, startY)
+    editRolesButton:SetPoint("TOPLEFT", parent, "TOPLEFT", C.tabs.leftPadding, C.tabs.startY)
     editRolesButton:SetAlpha(1)
     editRolesButton.tooltip = "Configure role filters for automatic tracking"
 
     --- Header Frame for column titles
-    local headerHeight = 20
     local header = CreateFrame("Frame", "$parentHeader", parent, "BackdropTemplate")
-    header:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, startY - 30)
-    header:SetSize(Epos.Constants.window_width - 40, headerHeight)
+    header:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, C.tabs.startY - 30)
+    header:SetSize(C.window_width - 40, C.tabs.lineHeight)
     DF:ApplyStandardBackdrop(header)
 
-    -- Header text color (same as "EposRaidTools" title: RGB 0,1,1)
-    local headerColorR, headerColorG, headerColorB = 0, 1, 1
+    -- Header text color (same as "EposRaidTools" title: RGB from C.colors)
+    local headerColorR, headerColorG, headerColorB = C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB
 
     -- Column: Name
     header.nameLabel = DF:CreateLabel(header, "Name")
@@ -200,33 +193,28 @@ function BuildRosterTab(parent)
     end
 
     --- ScrollBox Setup
-    -- Calculate how many rows fit into the visible area based on window height.
-    local lineHeight  = 20
-    local totalHeight = Epos.Constants.window_height - 180
-    local visibleRows = math.floor(totalHeight / lineHeight)
-
     local roster_scrollbox = DF:CreateScrollBox(
         parent,
         "VersionCheckScrollBox",             -- unique scrollbox name
         refresh,                             -- refresh function
         {},                                  -- initial empty data
-        Epos.Constants.window_width - 40,    -- scrollbox width
-        totalHeight,                         -- scrollbox height
-        visibleRows,                         -- number of visible rows
-        lineHeight,                          -- height of each row
+        C.window_width - 40,                 -- scrollbox width
+        C.tabs.totalHeight,                  -- scrollbox height
+        C.tabs.visibleRows,                  -- number of visible rows
+        C.tabs.lineHeight,                   -- height of each row
         createLineFunc                       -- line creation function
     )
 
     parent.scrollbox                = roster_scrollbox
     roster_scrollbox.MasterRefresh  = MasterRefresh
-    DF:ReskinSlider(roster_scrollbox)
     roster_scrollbox.ReajustNumFrames = true
+    DF:ReskinSlider(roster_scrollbox)
 
     -- Position scrollbox slightly higher (startY - 55 instead of startY - 60)
-    roster_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, startY - 55)
+    roster_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, C.tabs.startY - 55)
 
     -- Create exactly as many line frames as will fit on screen
-    for i = 1, visibleRows do
+    for i = 1, C.tabs.visibleRows do
         roster_scrollbox:CreateLine(createLineFunc)
     end
 

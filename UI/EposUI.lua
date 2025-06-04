@@ -1,9 +1,12 @@
--- ui/EposUI
+-- ui/EposUI.lua
 local _, Epos = ...
 local DF = _G["DetailsFramework"]
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 local WA = _G["WeakAuras"]
+
+-- Alias Constants as C
+local C = Epos.Constants
 
 local ui_panel_options = {
     UseStatusBar = true
@@ -11,8 +14,8 @@ local ui_panel_options = {
 
 local EposUI = DF:CreateSimplePanel(
     UIParent,
-    Epos.Constants.window_width,
-    Epos.Constants.window_height,
+    C.window_width,
+    C.window_height,
     "|cFF00FFFFEpos|r Raid Tools",
     "EposUI",
     ui_panel_options
@@ -40,9 +43,9 @@ function EposUI:Init()
             { name = "Setup",     text = "Setup"     },
         },
         {
-            width                = Epos.Constants.window_width,
-            height               = Epos.Constants.window_height - 5,
-            backdrop_color       = { 0, 0, 0, 0.2 },
+            width                 = C.window_width,
+            height                = C.window_height - 5,
+            backdrop_color        = { 0, 0, 0, 0.2 },
             backdrop_border_color = { 0.1, 0.1, 0.1, 0.4 },
         }
     )
@@ -59,7 +62,7 @@ function EposUI:Init()
         {
             type          = "label",
             get           = function() return "General Options" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            text_template = C.templates.text,
         },
         {
             type = "toggle",
@@ -98,14 +101,14 @@ function EposUI:Init()
         weakauras_tab,
         {},
         10, -100,                           -- x, y offset
-        Epos.Constants.window_height - 10,  -- height
+        C.window_height - 10,               -- height
         false,
-        Epos.Constants.templates.text,
-        Epos.Constants.templates.dropdown,
-        Epos.Constants.templates.switch,
+        C.templates.text,
+        C.templates.dropdown,
+        C.templates.switch,
         true,
-        Epos.Constants.templates.slider,
-        Epos.Constants.templates.button,
+        C.templates.slider,
+        C.templates.button,
         nil
     )
 
@@ -114,14 +117,14 @@ function EposUI:Init()
         addons_tab,
         {},
         10, -100,
-        Epos.Constants.window_height - 10,
+        C.window_height - 10,
         false,
-        Epos.Constants.templates.text,
-        Epos.Constants.templates.dropdown,
-        Epos.Constants.templates.switch,
+        C.templates.text,
+        C.templates.dropdown,
+        C.templates.switch,
         true,
-        Epos.Constants.templates.slider,
-        Epos.Constants.templates.button,
+        C.templates.slider,
+        C.templates.button,
         nil
     )
 
@@ -130,14 +133,14 @@ function EposUI:Init()
         settings_tab,
         settings_options_table,
         10, -100,
-        Epos.Constants.window_height - 10,
+        C.window_height - 10,
         false,
-        Epos.Constants.templates.text,
-        Epos.Constants.templates.dropdown,
-        Epos.Constants.templates.switch,
+        C.templates.text,
+        C.templates.dropdown,
+        C.templates.switch,
         true,
-        Epos.Constants.templates.slider,
-        Epos.Constants.templates.button,
+        C.templates.slider,
+        C.templates.button,
         nil
     )
 
@@ -146,14 +149,14 @@ function EposUI:Init()
         setup_tab,
         {},
         10, -100,
-        Epos.Constants.window_height - 10,
+        C.window_height - 10,
         false,
-        Epos.Constants.templates.text,
-        Epos.Constants.templates.dropdown,
-        Epos.Constants.templates.switch,
+        C.templates.text,
+        C.templates.dropdown,
+        C.templates.switch,
         true,
-        Epos.Constants.templates.slider,
-        Epos.Constants.templates.button,
+        C.templates.slider,
+        C.templates.button,
         nil
     )
 

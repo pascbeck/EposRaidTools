@@ -3,21 +3,8 @@ local _, Epos = ...
 local DF = _G["DetailsFramework"]
 
 function BuildCrestsTab(parent)
-    --- Constants (UI layout and sizing)
-    local headerHeight   = 20
-    local headerColorR   = 0
-    local headerColorG   = 1
-    local headerColorB   = 1
-    local buttonWidth    = 120
-    local buttonHeight   = 20
-    local spacingX       = 10
-    local topPadding     = -20
-    local leftPadding    = 10
-    local rightPadding   = -30
-    local startY         = -100
-    local lineHeight     = 20
-    local totalHeight    = Epos.Constants.window_height - 180
-    local visibleRows    = math.floor(totalHeight / lineHeight)
+    --- Shortcut to our constants table
+    local C = Epos.Constants
 
     --- Buttons
 
@@ -25,13 +12,13 @@ function BuildCrestsTab(parent)
     local requestDataButton = DF:CreateButton(
         parent,
         function() EposUI.crests_options:Show() end,  -- click handler shows options
-        buttonWidth,
-        buttonHeight,
+        C.tabs.buttonWidth,
+        C.tabs.buttonHeight,
         "Request Data",                              -- button text
         nil, nil, nil, nil, nil, nil,                -- unused padding/anchor arguments
-        Epos.Constants.templates.button
+        C.templates.button
     )
-    requestDataButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", rightPadding, startY)
+    requestDataButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", C.tabs.rightPadding, C.tabs.startY)
     requestDataButton:SetAlpha(1)
     requestDataButton.tooltip = "Request data from current selected players"
 
@@ -39,13 +26,13 @@ function BuildCrestsTab(parent)
     local crestsOptions = DF:CreateButton(
         parent,
         function() EposUI.crests_options:Show() end,  -- click handler shows options
-        buttonWidth,
-        buttonHeight,
+        C.tabs.buttonWidth,
+        C.tabs.buttonHeight,
         "Crests Options",                            -- button text
         nil, nil, nil, nil, nil, nil,                -- unused padding/anchor arguments
-        Epos.Constants.templates.button
+        C.templates.button
     )
-    crestsOptions:SetPoint("TOPLEFT", parent, "TOPLEFT", leftPadding, startY)
+    crestsOptions:SetPoint("TOPLEFT", parent, "TOPLEFT", C.tabs.leftPadding, C.tabs.startY)
     crestsOptions:SetAlpha(1)
     crestsOptions.tooltip = "Manually add players to the tracking blacklist"
 
@@ -84,39 +71,39 @@ function BuildCrestsTab(parent)
 
     --- Header Frame for column titles
     local header = CreateFrame("Frame", "$parentHeader", parent, "BackdropTemplate")
-    header:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, startY - 30)
-    header:SetSize(Epos.Constants.window_width - 40, headerHeight)
+    header:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, C.tabs.startY - 30)
+    header:SetSize(C.window_width - 40, C.tabs.lineHeight)
     DF:ApplyStandardBackdrop(header)
 
     -- Column: Name
     header.nameLabel = DF:CreateLabel(header, "Name")
     header.nameLabel:SetPoint("LEFT", header, "LEFT", 5, 0)
-    header.nameLabel:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.nameLabel:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
     -- Column: Available
     header.crestsAvailable = DF:CreateLabel(header, "Available")
     header.crestsAvailable:SetPoint("LEFT", header, "LEFT", 185, 0)
-    header.crestsAvailable:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.crestsAvailable:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
     -- Column: Obtainable
     header.crestsObtainable = DF:CreateLabel(header, "Obtainable")
     header.crestsObtainable:SetPoint("LEFT", header, "LEFT", 300, 0)
-    header.crestsObtainable:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.crestsObtainable:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
     -- Column: Used
     header.crestsUsed = DF:CreateLabel(header, "Used")
     header.crestsUsed:SetPoint("LEFT", header, "LEFT", 425, 0)
-    header.crestsUsed:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.crestsUsed:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
     -- Column: Total Earned
     header.crestsTotalEarned = DF:CreateLabel(header, "Total Earned")
     header.crestsTotalEarned:SetPoint("LEFT", header, "LEFT", 525, 0)
-    header.crestsTotalEarned:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.crestsTotalEarned:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
     -- Column: Updated
     header.updated = DF:CreateLabel(header, "Updated")
     header.updated:SetPoint("LEFT", header, "LEFT", 650, 0)
-    header.updated:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.updated:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
     --- Refresh function to populate each line with data
     -- @param self       The scrollbox object that holds all line frames
@@ -204,7 +191,7 @@ function BuildCrestsTab(parent)
                         })
                     end
                 end
-                end
+            end
         end
 
         -- Sort players by rank ascending
@@ -244,9 +231,9 @@ function BuildCrestsTab(parent)
             self,
             "TOPLEFT",
             1,
-            -((index - 1) * (self.LineHeight)) - 1
+            -((index - 1) * (C.tabs.lineHeight)) - 1
         )
-        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        line:SetSize(self:GetWidth() - 2, C.tabs.lineHeight)
         DF:ApplyStandardBackdrop(line)
 
         -- Name label
@@ -282,21 +269,21 @@ function BuildCrestsTab(parent)
         "VersionCheckScrollBox",            -- unique scrollbox name
         refresh,                            -- refresh function
         {},                                 -- initial empty data
-        Epos.Constants.window_width - 40,   -- scrollbox width
-        totalHeight,                        -- scrollbox height
-        visibleRows,                        -- number of visible rows
-        lineHeight,                         -- height of each row
+        C.window_width - 40,                -- scrollbox width
+        C.tabs.totalHeight,                 -- scrollbox height
+        C.tabs.visibleRows,                 -- number of visible rows
+        C.tabs.lineHeight,                  -- height of each row
         createLineFunc                      -- line creation function
     )
 
     parent.scrollbox               = crests_scrollbox
     crests_scrollbox.MasterRefresh = MasterRefresh
     crests_scrollbox.ReajustNumFrames = true
-    crests_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, startY - 55)
+    crests_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, C.tabs.startY - 55)
     DF:ReskinSlider(crests_scrollbox)
 
     -- Create exactly as many line frames as will fit on screen
-    for i = 1, visibleRows do
+    for i = 1, C.tabs.visibleRows do
         crests_scrollbox:CreateLine(createLineFunc)
     end
 
@@ -308,3 +295,4 @@ function BuildCrestsTab(parent)
     crests_scrollbox.__crestDropdown = crestMenuDropdown
     return crests_scrollbox
 end
+    
