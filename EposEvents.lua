@@ -62,8 +62,8 @@ function Epos:EventHandler(e, wowevent, internal, ...)
           ["Trial"]       = false,
         }
 
-      EposRT.CrestsOptions["fetch"] = EposRT.CrestsOptions["fetch"] or {}
-      EposRT.CrestsOptions["show"]  = EposRT.CrestsOptions["show"] or nil
+      EposRT.CrestsOptions["fetch"] = EposRT.CrestsOptions["fetch"] or { 3107, 3108, 3109, 3110 }
+      EposRT.CrestsOptions["show"]  = EposRT.CrestsOptions["show"] or 3110
     end
 
   elseif e == "PLAYER_LOGIN" and wowevent then
