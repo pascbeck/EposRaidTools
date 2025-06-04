@@ -28,5 +28,9 @@ UI/Roster/RosterUI.lua
 UI/Crests/CrestsOptions.lua
 UI/Crests/CrestsUI.lua
 
+# WeakAuras
+UI/WeakAuras/WeakAurasOptions.lua
+UI/WeakAuras/WeakAurasUI.lua
+
 # Main UI
 UI/EposUI.lua
