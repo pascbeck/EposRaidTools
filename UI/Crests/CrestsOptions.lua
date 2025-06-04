@@ -1,121 +1,233 @@
+-- ui/Crests/CrestsOptionsUI
 local _, Epos = ...
-local DF  = _G["DetailsFramework"]
+local DF = _G["DetailsFramework"]
 
 function BuildCrestsOptions()
-
-    local crests_options_modal = DF:CreateSimplePanel(
-        UIParent, 485, 420,
-        "Roles Management", "RolesEditFrame",
+    -- Create main options panel
+    local crests_options_frame = DF:CreateSimplePanel(
+        UIParent,
+        485,
+        420,
+        "Crests Options",
+        "CrestsOptionsFrame",
         { DontRightClickClose = true }
     )
-    crests_options_modal:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    crests_options_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
-    currencyNameLabel = DF:CreateLabel(crests_options_modal, "", 9, "cyan")
-    currencyNameLabel:SetPoint("topleft", crests_options_modal, "topleft", 10, -70)
+    ---
+    -- PrepareData: gather all saved currency entries
+    -- @return table A sorted list of currency data tables, each containing:
+    --   - id          (number): Currency ID
+    --   - name        (string): Currency name or "Invalid ID"
+    --   - description (string): Currency description or empty
+    --   - iconFileID  (number): Icon texture ID or nil
+    ---
+    local function PrepareData()
+        local data = {}
 
-    currencyIconTexture = DF:CreateTexture(crests_options_modal)
-    currencyIconTexture:SetSize(24, 24)  -- force small size
-    currencyIconTexture:SetPoint("left", currencyNameLabel, "right", 4, -1)  -- align with text
-    currencyIconTexture:SetTexCoord(0.075, 0.925, 0.075, 0.925)  -- crop padding
-    currencyIconTexture:Hide()
+        for _, id in pairs(EposRT.CrestsOptions["fetch"]) do
+            local info = C_CurrencyInfo.GetCurrencyInfo(id)
+            local name = info and info.name or "Invalid ID"
+            local description = ""
+            local iconFileID = info and info.iconFileID or nil
 
+            tinsert(data, {
+                id = id,
+                name = name,
+                description = description,
+                iconFileID = iconFileID,
+            })
+        end
 
-    local info = C_CurrencyInfo.GetCurrencyInfo(EposRT.CrestsOptions["fetch"])
-    currencyNameLabel.label:SetText(info and info.name or "Invalid ID")
+        table.sort(data, function(a, b)
+            return a.id < b.id
+        end)
 
-    if info and info.iconFileID then
-        currencyIconTexture:SetTexture(info.iconFileID)
-        currencyIconTexture:Show()
-    else
-        currencyIconTexture:Hide()
+        return data
     end
 
-    local options = {
-        {
-            type          = "label",
-            get           = function() return "Fetch Options" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
-        },
-        {
-            type = "textentry",
-            name = "Crest Unique Identifier",
-            desc = [[Enter any currency identifier to fetch for the database
+    ---
+    -- MasterRefresh: clears and repopulates the scrollbox with updated data
+    local function MasterRefresh(self)
+        local data = PrepareData()
+        self:SetData(data)
+        self:Refresh()
+    end
 
-Press 'Enter' to set the identifier]],
-            get = function()
-                return EposRT.CrestsOptions["fetch"]
-            end,
-            set = function(self, _, value) end,
-            hooks = {
-                OnEnterPressed = function(self)
-                    local text = self:GetText()
-                    -- try to convert to a number (if you expect numeric IDs)
-                    local id = tonumber(text)
-                    if not id then
-                        print("Invalid crest ID. Please enter a number.")
-                        return
-                    end
+    ---
+    -- refresh: populate each scroll line with currency info
+    -- @param self       The scrollbox object
+    -- @param data       Table containing currency entries
+    -- @param offset     Starting index offset into data table
+    -- @param totalLines Number of line frames to update
+    ---
+    local function refresh(self, data, offset, totalLines)
+        for i = 1, totalLines do
+            local index = i + offset
+            local entry = data[index]
 
-                    print("enter")
-                    print(currencyNameLabel)
-                    -- store in your table (you can choose any value; here we just mark true)
-                    EposRT.CrestsOptions["fetch"] = id
+            if entry then
+                local line = self:GetLine(i)
+                line.currencyID = entry.id
 
-                    -- clear focus so the user sees that input is accepted
-                    self:ClearFocus()
+                -- Icon (if valid)
+                if entry.iconFileID then
+                    line.iconTexture:SetTexture(entry.iconFileID)
+                    line.iconTexture:Show()
+                else
+                    line.iconTexture:Hide()
+                end
 
+                -- Name
+                line.nameLabel:SetText(entry.name)
 
-                    local info = C_CurrencyInfo.GetCurrencyInfo(id)
-                    currencyNameLabel.label:SetText(info and info.name or "Invalid ID")
+                -- Description (truncate if needed)
+                line.descLabel:SetText(entry.description)
 
-                    if info and info.iconFileID then
-                        currencyIconTexture:SetTexture(info.iconFileID)
+                -- Delete button handler removes by currencyID
+                -- (no extra state needed here)
+            end
+        end
+    end
 
-                        currencyIconTexture:Show()
-                    else
-                        currencyIconTexture:Hide()
-                    end
+    ---
+    -- createLineFunc: create one row in the scrollbox showing icon, name, desc, and delete button
+    -- @param self  Frame Parent scrollbox frame
+    -- @param index number Line index (used for vertical offset)
+    -- @return Frame A configured line frame with:
+    --   - iconTexture   (Texture): Currency icon
+    --   - nameLabel     (FontString): Currency name
+    --   - descLabel     (FontString): Currency description
+    --   - deleteButton  (Button): Remove this currency entry
+    ---
+    local function createLineFunc(self, index)
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        line:SetPoint(
+            "TOPLEFT",
+            self,
+            "TOPLEFT",
+            1,
+            -((index - 1) * (self.LineHeight)) - 1
+        )
+        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        DF:ApplyStandardBackdrop(line)
 
-                end,
-            },
-        },
-        {
-            type            = "break"
-        },
-        {
-            type            = "break"
-        },
-        {
-            type          = "label",
-            get           = function() return "General Options" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Hide empty or outdated entries",
-            desc = "Hide players without valid database entry (no entry at all, wrong crest id)",
-            get = function() return EposRT.Settings["Minimap"].hide end,
-            set = function(self, fixedparam, value)
-                EposRT.Settings["Minimap"].hide = value
-            end,
-        },
-    }
+        -- Icon (24x24) at left
+        line.iconTexture = line:CreateTexture(nil, "ARTWORK")
+        line.iconTexture:SetSize(24, 24)
+        line.iconTexture:SetPoint("LEFT", line, "LEFT", 5, 0)
 
-    DF:BuildMenu(
-        crests_options_modal,
-        options,
-        10, -30,  -- x, y offset
-        380, false,
-        DF:GetTemplate("font", "OPTIONS_FONT_TEMPLATE"),
-        DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE"),
-        DF:GetTemplate("switch", "OPTIONS_CHECKBOX_TEMPLATE"),
-        true,
-        DF:GetTemplate("slider", "OPTIONS_SLIDER_TEMPLATE"),
-        DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"),
-        nil
+        -- Name label (left of icon + padding)
+        line.nameLabel = DF:CreateLabel(line, "")
+        line.nameLabel:SetPoint("LEFT", line.iconTexture, "RIGHT", 8, 0)
+        line.nameLabel:SetWidth(240)
+
+        -- Description label (to the right of name)
+        line.descLabel = DF:CreateLabel(line, "")
+        line.descLabel:SetPoint("LEFT", line.nameLabel, "RIGHT", 10, 0)
+        line.descLabel:SetWidth(200)
+        line.descLabel:SetJustifyH("LEFT")
+
+        -- Delete button (12x12) at far right
+        line.deleteButton = DF:CreateButton(line, function()
+            local id = line.currencyID
+            if not id then
+                return
+            end
+
+            local list = EposRT.CrestsOptions["fetch"]
+            for i = #list, 1, -1 do
+                if list[i] == id then
+                    tremove(list, i)
+                    break
+                end
+            end
+
+            line:GetParent():MasterRefresh()
+        end, 12, 12)
+
+        line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:GetNormalTexture():SetDesaturated(true)
+        line.deleteButton:GetHighlightTexture():SetDesaturated(true)
+        line.deleteButton:GetPushedTexture():SetDesaturated(true)
+        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
+
+        return line
+    end
+
+    -- ScrollBox Setup
+    local scrollLines  = 15
+    local rowHeight    = 36
+    local scrollHeight = rowHeight * scrollLines
+    local scrollWidth  = 445
+
+    local crests_scrollbox = DF:CreateScrollBox(
+        crests_options_frame,
+        "$parentBlacklistScrollBox",
+        refresh,
+        {},
+        scrollWidth,   -- width
+        300,           -- height
+        scrollLines,   -- visible rows
+        rowHeight,     -- row height
+        createLineFunc
     )
 
-    crests_options_modal:Hide()
-    return crests_options_modal
+    crests_options_frame.scrollbox = crests_scrollbox
+    crests_scrollbox.MasterRefresh = MasterRefresh
+    DF:ReskinSlider(crests_scrollbox)
+    crests_scrollbox.ReajustNumFrames = true
+    crests_scrollbox:SetPoint("TOPLEFT", crests_options_frame, "TOPLEFT", 10, -50)
+
+    -- Create exactly as many line frames as will fit on screen
+    for i = 1, scrollLines do
+        crests_scrollbox:CreateLine(createLineFunc)
+    end
+
+    -- OnShow: refresh data when panel is shown
+    crests_scrollbox:SetScript("OnShow", function(self)
+        self:MasterRefresh()
+    end)
+
+    ---
+    -- Input area for adding new currency ID
+    ---
+    -- Label "New Identifier:"
+    local new_label = DF:CreateLabel(crests_options_frame, "New Identifier:", 11)
+    new_label:SetPoint("TOPLEFT", crests_scrollbox, "BOTTOMLEFT", 0, -20)
+
+    -- Text entry for ID input
+    local new_entry = DF:CreateTextEntry(crests_options_frame, function() end, 120, 20)
+    new_entry:SetPoint("LEFT", new_label, "RIGHT", 10, 0)
+    new_entry:SetTemplate(DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE"))
+
+    -- Add button to insert the entered currency ID
+    local add_button = DF:CreateButton(crests_options_frame, function()
+        local text = new_entry:GetText():trim()
+        local id = tonumber(text)
+
+        if not id then
+            print("Invalid currency ID. Please enter a number.")
+            return
+        end
+
+        -- Avoid duplicates
+        for _, existing in ipairs(EposRT.CrestsOptions["fetch"]) do
+            if existing == id then
+                return
+            end
+        end
+
+        tinsert(EposRT.CrestsOptions["fetch"], id)
+        new_entry:SetText("")
+        crests_scrollbox:MasterRefresh()
+    end, 60, 20, "Add")
+
+    add_button:SetPoint("LEFT", new_entry, "RIGHT", 10, 0)
+    add_button:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+
+    crests_options_frame:Hide()
+    return crests_options_frame
 end

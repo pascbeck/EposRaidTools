@@ -1,24 +1,31 @@
 local _, Epos = ...
-local DF  = _G["DetailsFramework"]
+local DF = _G["DetailsFramework"]
 
 function BuildTrackingOptions()
     local tracking_options_frame = DF:CreateSimplePanel(
-        UIParent, 485, 420,
-        "Roles Management", "RolesEditFrame",
+        UIParent,
+        485,
+        420,
+        "Roles Management",
+        "RolesEditFrame",
         { DontRightClickClose = true }
     )
     tracking_options_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
     local ranks = {
-        "Guildlead", "Officer", "Officer Alt",
-        "Raider", "Raid Alt", "Trial",
+        "Guildlead",
+        "Officer",
+        "Officer Alt",
+        "Raider",
+        "Raid Alt",
+        "Trial",
     }
 
     local options = {
         {
             type          = "label",
             get           = function() return "Track guild ranks" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
     }
 
@@ -42,13 +49,14 @@ function BuildTrackingOptions()
     end
 
     table.insert(options, { type = "break" })
+
     table.insert(options, {
         type          = "label",
         get           = function() return "Automatic background update" end,
         text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
     })
 
-    -- Sample saved-vars for interval fetching:
+    -- Sample saved-vars for interval fetching
     EposSaved = EposSaved or {}
     EposSaved.enableIntervalFetching = EposSaved.enableIntervalFetching or false
     EposSaved.fetchInterval = EposSaved.fetchInterval or 10
@@ -62,6 +70,7 @@ function BuildTrackingOptions()
         set      = function(_, _, value) EposSaved.enableIntervalFetching = value end,
         nocombat = true,
     })
+
     table.insert(options, {
         type     = "slider",
         name     = "Interval (Seconds)",
@@ -76,13 +85,14 @@ function BuildTrackingOptions()
     })
 
     table.insert(options, { type = "break" })
+
     table.insert(options, {
         type          = "label",
         get           = function() return "Blacklist & Whitelist" end,
         text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
     })
 
-    -- Insert “Edit Blacklist” as a menu‐button:
+    -- "Edit Blacklist" as a menu-button
     table.insert(options, {
         type = "execute",
         name = "Edit Blacklist",
@@ -98,8 +108,10 @@ function BuildTrackingOptions()
     DF:BuildMenu(
         tracking_options_frame,
         options,
-        10, -30,  -- x, y offset
-        380, false,
+        10,
+        -30,  -- x, y offset
+        380,
+        false,
         DF:GetTemplate("font", "OPTIONS_FONT_TEMPLATE"),
         DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE"),
         DF:GetTemplate("switch", "OPTIONS_CHECKBOX_TEMPLATE"),

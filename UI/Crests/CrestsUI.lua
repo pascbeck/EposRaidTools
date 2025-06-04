@@ -1,118 +1,161 @@
+-- ui/Crests/CrestsUI
 local _, Epos = ...
-local DF  = _G["DetailsFramework"]
+local DF = _G["DetailsFramework"]
 
 function BuildCrestsTab(parent)
-    local buttonWidth = 120
-    local buttonHeight = 20
-    local spacingX = 10
-    local topPadding = -20
-    local leftPadding = 10
-    local rightPadding = -30
-    local startY = -100
+    --- Constants (UI layout and sizing)
+    local headerHeight   = 20
+    local headerColorR   = 0
+    local headerColorG   = 1
+    local headerColorB   = 1
+    local buttonWidth    = 120
+    local buttonHeight   = 20
+    local spacingX       = 10
+    local topPadding     = -20
+    local leftPadding    = 10
+    local rightPadding   = -30
+    local startY         = -100
+    local lineHeight     = 20
+    local totalHeight    = Epos.Constants.window_height - 180
+    local visibleRows    = math.floor(totalHeight / lineHeight)
 
-    -- “Request Data” goes to far‐left
+    --- Buttons
+
+    -- "Request Data" Button (far right)
     local requestDataButton = DF:CreateButton(
         parent,
-        OnClick_EditWhitelist,
+        function() EposUI.crests_options:Show() end,  -- click handler shows options
         buttonWidth,
         buttonHeight,
-        "Request Data",
-        nil, nil, nil, nil, nil, nil,
+        "Request Data",                              -- button text
+        nil, nil, nil, nil, nil, nil,                -- unused padding/anchor arguments
         Epos.Constants.templates.button
     )
     requestDataButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", rightPadding, startY)
     requestDataButton:SetAlpha(1)
     requestDataButton.tooltip = "Request data from current selected players"
 
-    -- “Edit Blacklist” stays at far‐right
-    local blacklistButton = DF:CreateButton(
+    -- "Crests Options" Button (far left)
+    local crestsOptions = DF:CreateButton(
         parent,
-        function() EposUI.crests_options:Show() end,
+        function() EposUI.crests_options:Show() end,  -- click handler shows options
         buttonWidth,
         buttonHeight,
-        "Crests Options",
-        nil, nil, nil, nil, nil, nil,
+        "Crests Options",                            -- button text
+        nil, nil, nil, nil, nil, nil,                -- unused padding/anchor arguments
         Epos.Constants.templates.button
     )
-    blacklistButton:SetPoint("TOPLEFT", parent, "TOPLEFT", leftPadding, startY)
-    blacklistButton:SetAlpha(1)
-    blacklistButton.tooltip = "Manually add players to the tracking blacklist"
+    crestsOptions:SetPoint("TOPLEFT", parent, "TOPLEFT", leftPadding, startY)
+    crestsOptions:SetAlpha(1)
+    crestsOptions.tooltip = "Manually add players to the tracking blacklist"
 
-    -- Create header frame for column titles
-    local headerHeight = 20
+    --- Header Frame for column titles
     local header = CreateFrame("Frame", "$parentHeader", parent, "BackdropTemplate")
     header:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, startY - 30)
     header:SetSize(Epos.Constants.window_width - 40, headerHeight)
     DF:ApplyStandardBackdrop(header)
 
-    -- Use the same blue as "EposRaidTools" title: RGB (0, 1, 1)
-    local headerColorR, headerColorG, headerColorB = 0, 1, 1
-
+    -- Column: Name
     header.nameLabel = DF:CreateLabel(header, "Name")
     header.nameLabel:SetPoint("LEFT", header, "LEFT", 5, 0)
     header.nameLabel:SetTextColor(headerColorR, headerColorG, headerColorB)
 
+    -- Column: Available
     header.crestsAvailable = DF:CreateLabel(header, "Available")
     header.crestsAvailable:SetPoint("LEFT", header, "LEFT", 185, 0)
     header.crestsAvailable:SetTextColor(headerColorR, headerColorG, headerColorB)
 
+    -- Column: Obtainable
     header.crestsObtainable = DF:CreateLabel(header, "Obtainable")
     header.crestsObtainable:SetPoint("LEFT", header, "LEFT", 300, 0)
     header.crestsObtainable:SetTextColor(headerColorR, headerColorG, headerColorB)
 
+    -- Column: Used
     header.crestsUsed = DF:CreateLabel(header, "Used")
     header.crestsUsed:SetPoint("LEFT", header, "LEFT", 425, 0)
     header.crestsUsed:SetTextColor(headerColorR, headerColorG, headerColorB)
 
+    -- Column: Total Earned
     header.crestsTotalEarned = DF:CreateLabel(header, "Total Earned")
     header.crestsTotalEarned:SetPoint("LEFT", header, "LEFT", 525, 0)
     header.crestsTotalEarned:SetTextColor(headerColorR, headerColorG, headerColorB)
 
+    -- Column: Updated
     header.updated = DF:CreateLabel(header, "Updated")
     header.updated:SetPoint("LEFT", header, "LEFT", 650, 0)
     header.updated:SetTextColor(headerColorR, headerColorG, headerColorB)
 
-    -- Refresh function for each data line
+    --- Refresh function to populate each line with data
+    -- @param self       The scrollbox object that holds all line frames
+    -- @param data       Table containing crest entries
+    -- @param offset     Starting index offset into the data table
+    -- @param totalLines Number of line frames to update
     local function refresh(self, data, offset, totalLines)
         for i = 1, totalLines do
-            local index = i + offset
-            local nickData = data[index]
-            if nickData then
+            local index     = i + offset
+            local dataEntry = data[index]
+
+            if dataEntry then
                 local line = self:GetLine(i)
 
-                -- get class color (fallback to white)
-                local classColor = RAID_CLASS_COLORS[nickData.class] or { r = 1, g = 1, b = 1 }
+                -- Determine class color for the name
+                local classColor = RAID_CLASS_COLORS[dataEntry.class]
 
-                line.name:SetText(nickData.name)
+                -- Name column (colored by class)
+                line.name:SetText(dataEntry.name)
                 line.name:SetTextColor(classColor.r, classColor.g, classColor.b)
 
-                line.crestsAvailable:SetText(nickData.crestsAvailable)
-                line.crestsObtainable:SetText(nickData.crestsObtainable)
-                line.crestsUsed:SetText(nickData.crestsUsed)
-                line.crestsTotalEarned:SetText(nickData.crestsTotalEarned)
-                line.timetamp:SetText(nickData.timestamp)
+                -- Available column (number of crests currently available)
+                line.crestsAvailable:SetText(dataEntry.crestsAvailable)
+
+                -- Obtainable column (crests remaining this week or "Infinite")
+                line.crestsObtainable:SetText(dataEntry.crestsObtainable)
+
+                -- Used column (total crests spent)
+                line.crestsUsed:SetText(dataEntry.crestsUsed)
+
+                -- Total Earned column (total crests earned to date)
+                line.crestsTotalEarned:SetText(dataEntry.crestsTotalEarned)
+
+                -- Updated column (last updated timestamp)
+                line.timetamp:SetText(dataEntry.timestamp)
             end
         end
     end
 
-    -- Prepare data for scrollbox
+    --- Prepares and returns filtered, formatted player crest data.
+    -- Gathers information from the guild roster and player database,
+    -- filters based on tracked roles and blacklist, and calculates
+    -- crest-related values for each valid player.
+    --
+    -- @return table A sorted list of player data tables, each containing:
+    --   - name              (string): Player's name
+    --   - crestsAvailable   (number): Current crest quantity
+    --   - crestsObtainable  (number|string): Remaining crests obtainable this week or "Infinite"
+    --   - crestsUsed        (number): Total crests spent
+    --   - crestsTotalEarned (number): Total crests earned to date
+    --   - rank              (number): Player's rank in the guild
+    --   - class             (string): Player's class
+    --   - timestamp         (string): Last updated timestamp (YYYY-MM-DD or "-")
     local function PrepareData()
-        local data = {}
+        local data         = {}
         local trackedRoles = EposRT.Settings and EposRT.Settings.TrackedRoles or {}
 
         for _, player in ipairs(EposRT.GuildRoster) do
-            local db = EposRT.PlayerDatabase[player.name]
-
+            local db = EposRT.PlayerDatabase[player.name]  -- database entry for this player
             if db then
-                local currency = db.currency
+                local currency            = db.currency
+                local crestsAvailable     = currency.quantity
+                local crestsObtainable    = currency.canEarnPerWeek and
+                                            (currency.maxQuantity - currency.totalEarned) or
+                                            "Infinite"
+                local crestsUsed          = currency.totalEarned - currency.quantity
+                local crestsTotalEarned   = currency.totalEarned
+                local timestamp           = db.timestamp and
+                                            date("%Y-%m-%d", db.timestamp) or
+                                            "-"
 
-                local useTotalEarnedForMaxQty = currency.useTotalEarnedForMaxQty
-                local crestsAvailable   = currency.quantity
-                local crestsObtainable  = currency.canEarnPerWeek and (currency.maxQuantity - currency.totalEarned) or "Infinite"
-                local crestsUsed        = currency.totalEarned - currency.quantity
-                local crestsTotalEarned = currency.totalEarned
-                local timestamp         = db.timestamp and date("%Y-%m-%d", db.timestamp) or "-"
-
+                -- Only include player if their rank is tracked and not blacklisted
                 if trackedRoles[player.rank] and not EposRT.Blacklist[player.name] then
                     table.insert(data, {
                         name                = player.name,
@@ -122,13 +165,13 @@ function BuildCrestsTab(parent)
                         crestsTotalEarned   = crestsTotalEarned,
                         rank                = player.rank,
                         class               = player.class,
-                        timestamp           = timestamp
+                        timestamp           = timestamp,
                     })
                 end
             end
-
         end
 
+        -- Sort players by rank ascending
         table.sort(data, function(a, b)
             return a.rank < b.rank
         end)
@@ -136,6 +179,8 @@ function BuildCrestsTab(parent)
         return data
     end
 
+    --- MasterRefresh: clears existing data and repopulates the scrollbox
+    -- @param self The scrollbox object
     local function MasterRefresh(self)
         local data = PrepareData()
         self:SetData({})
@@ -143,63 +188,83 @@ function BuildCrestsTab(parent)
         self:Refresh()
     end
 
+    --- Creates and returns a single row line for the scrollbox.
+    -- Each line is a frame with labels for player name and crest-related stats,
+    -- positioned based on its index within the scrollable frame.
+    --
+    -- @param self  Frame  The parent scrollbox frame
+    -- @param index number Line index (used for vertical offset)
+    -- @return Frame A configured line frame with attached label elements:
+    --   - name              (FontString): Player name
+    --   - crestsAvailable   (FontString): Current crest quantity
+    --   - crestsObtainable  (FontString): Remaining crests this week
+    --   - crestsUsed        (FontString): Crests spent
+    --   - crestsTotalEarned (FontString): Total crests earned
+    --   - timetamp          (FontString): Last updated timestamp
     local function createLineFunc(self, index)
         local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
-        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
+        line:SetPoint(
+            "TOPLEFT",
+            self,
+            "TOPLEFT",
+            1,
+            -((index - 1) * (self.LineHeight)) - 1
+        )
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)
 
+        -- Name label
         line.name = DF:CreateLabel(line, "")
         line.name:SetPoint("LEFT", line, "LEFT", 5, 0)
 
+        -- Available label
         line.crestsAvailable = DF:CreateLabel(line, "")
         line.crestsAvailable:SetPoint("LEFT", line, "LEFT", 185, 0)
 
+        -- Obtainable label
         line.crestsObtainable = DF:CreateLabel(line, "")
         line.crestsObtainable:SetPoint("LEFT", line, "LEFT", 300, 0)
 
+        -- Used label
         line.crestsUsed = DF:CreateLabel(line, "")
         line.crestsUsed:SetPoint("LEFT", line, "LEFT", 425, 0)
 
+        -- Total Earned label
         line.crestsTotalEarned = DF:CreateLabel(line, "")
         line.crestsTotalEarned:SetPoint("LEFT", line, "LEFT", 525, 0)
 
+        -- Updated timestamp label (note: variable name typo replicates original)
         line.timetamp = DF:CreateLabel(line, "")
         line.timetamp:SetPoint("LEFT", line, "LEFT", 650, 0)
 
         return line
     end
 
-    -- figure out exactly how many rows fit in (Epos.Constants.window_height - 165)
-    local lineHeight  = 20
-    local totalHeight = Epos.Constants.window_height - 180
-    local visibleRows = math.floor(totalHeight / lineHeight)
+    --- ScrollBox Setup
+    local crests_scrollbox = DF:CreateScrollBox(
+        parent,
+        "VersionCheckScrollBox",            -- unique scrollbox name
+        refresh,                            -- refresh function
+        {},                                 -- initial empty data
+        Epos.Constants.window_width - 40,   -- scrollbox width
+        totalHeight,                        -- scrollbox height
+        visibleRows,                        -- number of visible rows
+        lineHeight,                         -- height of each row
+        createLineFunc                      -- line creation function
+    )
 
-    local crests_scrollbox =
-        DF:CreateScrollBox(
-            parent,
-            "VersionCheckScrollBox",
-            refresh,
-            {},
-            Epos.Constants.window_width - 40,
-            totalHeight,
-            visibleRows,
-            lineHeight,
-            createLineFunc
-        )
-    parent.scrollbox        	   = crests_scrollbox
+    parent.scrollbox               = crests_scrollbox
     crests_scrollbox.MasterRefresh = MasterRefresh
-
-    DF:ReskinSlider(crests_scrollbox)
     crests_scrollbox.ReajustNumFrames = true
-    -- moved scrollbox up by 5 pixels as well (startY - 55 instead of startY - 60)
     crests_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, startY - 55)
+    DF:ReskinSlider(crests_scrollbox)
 
-    -- create exactly as many line frames as will fit on screen
+    -- Create exactly as many line frames as will fit on screen
     for i = 1, visibleRows do
         crests_scrollbox:CreateLine(createLineFunc)
     end
 
+    -- OnShow handler: refresh data whenever tab is shown
     crests_scrollbox:SetScript("OnShow", function(self)
         EposUI.crests_tab:MasterRefresh()
     end)
