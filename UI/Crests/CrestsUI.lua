@@ -49,6 +49,39 @@ function BuildCrestsTab(parent)
     crestsOptions:SetAlpha(1)
     crestsOptions.tooltip = "Manually add players to the tracking blacklist"
 
+    local crestMenuDropdown
+    local function crestMenuDropdownOptions()
+        local t = {}
+        for i, crestID in ipairs(EposRT.CrestsOptions["fetch"]) do
+            local info = C_CurrencyInfo.GetCurrencyInfo(crestID)
+            local name = info and info.name or ("Unknown (" .. crestID .. ")")
+
+            tinsert(t, {
+                label = name,
+                value = crestID,
+                onclick = function(_, _, value)
+                    EposRT.CrestsOptions["show"] = value
+                    if (EposUI.crests_tab) then
+                        EposUI.crests_tab:MasterRefresh()
+                    end
+                end
+            })
+        end
+        return t
+    end
+
+    crestMenuDropdown =
+        DF:CreateDropDown(
+            parent,
+            crestMenuDropdownOptions,
+            EposRT.CrestsOptions["show"],
+            200,
+            30
+        )
+
+    crestMenuDropdown:SetTemplate("OPTIONS_DROPDOWN_TEMPLATE")
+    crestMenuDropdown:SetPoint("LEFT", crestsOptions, "RIGHT", 15, 0)
+
     --- Header Frame for column titles
     local header = CreateFrame("Frame", "$parentHeader", parent, "BackdropTemplate")
     header:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, startY - 30)
@@ -144,31 +177,34 @@ function BuildCrestsTab(parent)
         for _, player in ipairs(EposRT.GuildRoster) do
             local db = EposRT.PlayerDatabase[player.name]  -- database entry for this player
             if db then
-                local currency            = db.currency
-                local crestsAvailable     = currency.quantity
-                local crestsObtainable    = currency.canEarnPerWeek and
-                                            (currency.maxQuantity - currency.totalEarned) or
-                                            "Infinite"
-                local crestsUsed          = currency.totalEarned - currency.quantity
-                local crestsTotalEarned   = currency.totalEarned
-                local timestamp           = db.timestamp and
-                                            date("%Y-%m-%d", db.timestamp) or
-                                            "-"
+                local currency            = db.currency[EposRT.CrestsOptions["show"]]
 
-                -- Only include player if their rank is tracked and not blacklisted
-                if trackedRoles[player.rank] and not EposRT.Blacklist[player.name] then
-                    table.insert(data, {
-                        name                = player.name,
-                        crestsAvailable     = crestsAvailable,
-                        crestsObtainable    = crestsObtainable,
-                        crestsUsed          = crestsUsed,
-                        crestsTotalEarned   = crestsTotalEarned,
-                        rank                = player.rank,
-                        class               = player.class,
-                        timestamp           = timestamp,
-                    })
+                if currency then
+                    local crestsAvailable     = currency.quantity
+                    local crestsObtainable    = currency.canEarnPerWeek and
+                                                (currency.maxQuantity - currency.totalEarned) or
+                                                "Infinite"
+                    local crestsUsed          = currency.totalEarned - currency.quantity
+                    local crestsTotalEarned   = currency.totalEarned
+                    local timestamp           = db.timestamp and
+                                                date("%Y-%m-%d", db.timestamp) or
+                                                "-"
+
+                    -- Only include player if their rank is tracked and not blacklisted
+                    if trackedRoles[player.rank] and not EposRT.Blacklist[player.name] then
+                        table.insert(data, {
+                            name                = player.name,
+                            crestsAvailable     = crestsAvailable,
+                            crestsObtainable    = crestsObtainable,
+                            crestsUsed          = crestsUsed,
+                            crestsTotalEarned   = crestsTotalEarned,
+                            rank                = player.rank,
+                            class               = player.class,
+                            timestamp           = timestamp,
+                        })
+                    end
                 end
-            end
+                end
         end
 
         -- Sort players by rank ascending
@@ -269,5 +305,6 @@ function BuildCrestsTab(parent)
         EposUI.crests_tab:MasterRefresh()
     end)
 
+    crests_scrollbox.__crestDropdown = crestMenuDropdown
     return crests_scrollbox
 end

@@ -131,10 +131,9 @@ function BuildCrestsOptions()
         -- Delete button (12x12) at far right
         line.deleteButton = DF:CreateButton(line, function()
             local id = line.currencyID
-            if not id then
-                return
-            end
+            if not id then return end
 
+            -- Remove `id` from the “fetch” list
             local list = EposRT.CrestsOptions["fetch"]
             for i = #list, 1, -1 do
                 if list[i] == id then
@@ -143,8 +142,22 @@ function BuildCrestsOptions()
                 end
             end
 
+            EposRT.CrestsOptions["show"] = EposRT.CrestsOptions["fetch"][1] or nil
+
+            if (EposUI.crests_tab) then
+                local dd = EposUI.crests_tab.__crestDropdown
+                if dd then
+                    dd:Refresh()
+                    dd:Select(EposRT.CrestsOptions["fetch"][1])
+                    EposUI.crests_tab:MasterRefresh()
+                end
+            end
+
+            -- Refresh the options‐panel scrollbox (that “Delete” button lives in)
             line:GetParent():MasterRefresh()
         end, 12, 12)
+
+
 
         line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
         line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
@@ -221,8 +234,22 @@ function BuildCrestsOptions()
         end
 
         tinsert(EposRT.CrestsOptions["fetch"], id)
+        EposRT.CrestsOptions["show"] = id
         new_entry:SetText("")
         crests_scrollbox:MasterRefresh()
+
+        print("before refresh")
+        if (EposUI.crests_tab) then
+            print("after first refresh")
+
+            -- Force the dropdown to rebuild its menu
+            local dd = EposUI.crests_tab.__crestDropdown
+            if dd then
+                dd:Refresh()
+                dd:Select(id)
+                EposUI.crests_tab:MasterRefresh()
+            end
+        end
     end, 60, 20, "Add")
 
     add_button:SetPoint("LEFT", new_entry, "RIGHT", 10, 0)
