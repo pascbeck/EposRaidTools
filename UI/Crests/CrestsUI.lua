@@ -90,7 +90,7 @@ function BuildCrestsTab(parent)
                 line.crestsObtainable:SetText(nickData.crestsObtainable)
                 line.crestsUsed:SetText(nickData.crestsUsed)
                 line.crestsTotalEarned:SetText(nickData.crestsTotalEarned)
-                line.updated:SetText("321")
+                line.timetamp:SetText(nickData.timestamp)
             end
         end
     end
@@ -107,12 +107,11 @@ function BuildCrestsTab(parent)
                 local currency = db.currency
 
                 local useTotalEarnedForMaxQty = currency.useTotalEarnedForMaxQty
-
                 local crestsAvailable   = currency.quantity
                 local crestsObtainable  = currency.canEarnPerWeek and (currency.maxQuantity - currency.totalEarned) or "Infinite"
                 local crestsUsed        = currency.totalEarned - currency.quantity
                 local crestsTotalEarned = currency.totalEarned
-
+                local timestamp         = db.timestamp and date("%Y-%m-%d", db.timestamp) or "-"
 
                 if trackedRoles[player.rank] and not EposRT.Blacklist[player.name] then
                     table.insert(data, {
@@ -121,6 +120,9 @@ function BuildCrestsTab(parent)
                         crestsObtainable    = crestsObtainable,
                         crestsUsed          = crestsUsed,
                         crestsTotalEarned   = crestsTotalEarned,
+                        rank                = player.rank,
+                        class               = player.class,
+                        timestamp           = timestamp
                     })
                 end
             end
@@ -162,8 +164,8 @@ function BuildCrestsTab(parent)
         line.crestsTotalEarned = DF:CreateLabel(line, "")
         line.crestsTotalEarned:SetPoint("LEFT", line, "LEFT", 525, 0)
 
-        line.updated = DF:CreateLabel(line, "")
-        line.updated:SetPoint("LEFT", line, "LEFT", 650, 0)
+        line.timetamp = DF:CreateLabel(line, "")
+        line.timetamp:SetPoint("LEFT", line, "LEFT", 650, 0)
 
         return line
     end
