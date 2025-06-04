@@ -94,23 +94,21 @@ function EposUI:Init()
             desc = "Choose Frame Strata for Epos Raid Tools.",
             nocombat = true,
         },
+        {
+            type = "execute",
+            name = "Clear EposRT Data",
+            desc = "This will erase all EposRT saved settings and reload the UI.",
+            confirm = true,
+            confirmText = "Are you sure you want to clear all EposRT data? This cannot be undone.",
+            func = function()
+                -- Clear the saved settings
+                -- Also clear runtime state if needed
+                EposRT = {}
+                -- Reload UI to apply changes
+                ReloadUI()
+            end,
+        },
     }
-
-    -- WeakAuras tab (empty menu)
-    DF:BuildMenu(
-        weakauras_tab,
-        {},
-        10, -100,                           -- x, y offset
-        C.window_height - 10,               -- height
-        false,
-        C.templates.text,
-        C.templates.dropdown,
-        C.templates.switch,
-        true,
-        C.templates.slider,
-        C.templates.button,
-        nil
-    )
 
     -- AddOns tab (empty menu)
     DF:BuildMenu(
@@ -168,6 +166,9 @@ function EposUI:Init()
     -- Build crest UI
     EposUI.crests_tab       = BuildCrestsTab(crests_tab)
     EposUI.crests_options   = BuildCrestsOptions()
+
+    -- WeakAuras UI
+    EposUI.weakauras_tab    = BuildWeakAurasTab(weakauras_tab)
 
     -- Version number in status bar
     local versionTitle = C_AddOns.GetAddOnMetadata("EposRaidTools", "Title")

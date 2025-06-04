@@ -4,7 +4,6 @@ local f = CreateFrame("Frame")
 
 f:RegisterEvent("ENCOUNTER_START")
 f:RegisterEvent("ENCOUNTER_END")
-f:RegisterEvent("UNIT_AURA")
 f:RegisterEvent("READY_CHECK")
 f:RegisterEvent("GROUP_FORMED")
 f:RegisterEvent("ADDON_LOADED")
@@ -30,6 +29,7 @@ function Epos:EventHandler(e, wowevent, internal, ...)
       if not EposRT.PlayerDatabase then EposRT.PlayerDatabase = {} end
       if not EposRT.Blacklist      then EposRT.Blacklist    = {} end
       if not EposRT.CrestsOptions  then EposRT.CrestsOptions = {} end
+      if not EposRT.WeakAurasOptions then EposRT.WeakAurasOptions = {} end
 
       local AceComm = LibStub("AceComm-3.0", true)
       if AceComm then
@@ -37,13 +37,18 @@ function Epos:EventHandler(e, wowevent, internal, ...)
           local LD = LibStub("LibDeflate", true)
           local LS = LibStub("LibSerialize", true)
 
+          print("before decode")
           if not LD or not LS then return end
           local decoded = LD:DecodeForWoWAddonChannel(encoded)
           if not decoded then return end
+          print("after decode")
           local decompressed = LD:DecompressDeflate(decoded)
           if not decompressed then return end
+          print("after decompressed")
           local ok, payload = LS:Deserialize(decompressed)
+          print("after payload")
           if not ok then return end
+          print("all ok")
 
           Epos:EventHandler("EPOSDATABASE", false, true, payload, sender)
         end)
@@ -64,6 +69,18 @@ function Epos:EventHandler(e, wowevent, internal, ...)
 
       EposRT.CrestsOptions["fetch"] = EposRT.CrestsOptions["fetch"] or { 3107, 3108, 3109, 3110 }
       EposRT.CrestsOptions["show"]  = EposRT.CrestsOptions["show"] or 3110
+
+
+      EposRT.WeakAurasOptions["fetch"] =  {
+        "Epos Database",
+        "Interrupt Anchor",
+        "Kaze MRT Timers",
+        "Liberation of Undermine",
+        "Northern Sky Liberation of Undermine",
+        "RaidBuff Reminders",
+        "WeakAura Anchors (don't rename these)"
+      }
+      EposRT.WeakAurasOptions["show"]  = EposRT.WeakAurasOptions["show"] or 3110
     end
 
   elseif e == "PLAYER_LOGIN" and wowevent then
