@@ -1,78 +1,87 @@
--- ui/WeakAuras/WeakAurasOptionsUI
-local _, Epos = ...
-local DF = _G["DetailsFramework"]
+-- ui/weakauras/WeakAurasOptionsUI.lua
 
+local _, Epos = ...
+
+-- Cached Globals
+local DF               = _G.DetailsFramework               -- DetailsFramework library
+local UIParent         = _G.UIParent                       -- Blizzard UI parent frame
+local CreateFrame      = _G.CreateFrame                    -- Frame creation function
+local WeakAuras        = _G.WeakAuras                      -- WeakAuras global
+local table_insert     = table.insert                      -- Table insert
+local table_sort       = table.sort                        -- Table sort
+local strfind          = _G.strfind                        -- String find
+local print            = print                             -- Print to chat
+local C                = Epos.Constants                    -- Constants table (templates, sizes, colors)
+
+-- Local Constants
+local PANEL_WIDTH    = 485                                 -- Width of the options panel
+local PANEL_HEIGHT   = 420                                 -- Height of the options panel
+local SCROLL_WIDTH   = PANEL_WIDTH - 40                    -- ScrollBox width (pad 10 each side)
+local SCROLL_HEIGHT  = 300                                 -- ScrollBox height
+local ROW_HEIGHT     = 36                                  -- Height of each scroll row
+local VISIBLE_ROWS   = 15                                  -- Number of visible rows in ScrollBox
+
+--- BuildWeakAurasOptions()
+-- @return Frame  The created WeakAuras options frame (hidden by default).
 function BuildWeakAurasOptions()
-    -- Create main options panel
+    -- Create the Main Panel
     local wa_options_frame = DF:CreateSimplePanel(
-        UIParent,
-        485,
-        420,
-        "WeakAuras Options",
-        "WeakAurasOptionsFrame",
-        { DontRightClickClose = true }
+            UIParent,
+            PANEL_WIDTH,
+            PANEL_HEIGHT,
+            "WeakAuras Options",
+            "WeakAurasOptionsFrame",
+            { DontRightClickClose = true }
     )
     wa_options_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
-    ---
-    -- PrepareData: gather all saved WA‐set entries
-    -- @return table A sorted list of WA data tables, each containing:
-    --   - id          (number): WA set ID
-    --   - name        (string): WA set name or "Invalid ID"
-    --   - description (string): WA set description or empty
-    --   - iconFileID  (number): WA set icon texture ID or nil
-    ---
+    --- Local Helper: PrepareData
+    --- Gathers all currently fetched WeakAura set IDs into a sorted table with info.
+    -- Replace WeakAuras.GetData(id) with your actual API if needed.
+    -- @return table  Array of { id, name, description, iconFileID } entries.
     local function PrepareData()
         local data = {}
-
-        for _, id in pairs(EposRT.WeakAurasOptions["fetch"]) do
-            -- Attempt to retrieve WA set info; replace with actual WA‐API call if different
+        for _, id in ipairs(EposRT.WeakAurasOptions.fetch) do
             local info = WeakAuras and WeakAuras.GetData(id) or nil
             local name = (info and info.id) or id
             local description = (info and info.desc) or ""
             local iconFileID = (info and info.icon) or nil
 
-            tinsert(data, {
-                id = id,
-                name = name,
+            table_insert(data, {
+                id          = id,
+                name        = name,
                 description = description,
-                iconFileID = iconFileID,
+                iconFileID  = iconFileID,
             })
         end
-
-        table.sort(data, function(a, b)
-            return a.id < b.id
-        end)
-
+        table_sort(data, function(a, b) return a.id < b.id end)
         return data
     end
 
-    ---
-    -- MasterRefresh: clears and repopulates the scrollbox with updated data
-    ---
+    --- Local Helper: MasterRefresh
+    --- Clears and repopulates the ScrollBox with updated WeakAura data.
+    -- @param self  ScrollBox  The ScrollBox instance.
     local function MasterRefresh(self)
         local data = PrepareData()
         self:SetData(data)
         self:Refresh()
     end
 
-    ---
-    -- refresh: populate each scroll line with WA‐set info
-    -- @param self       The scrollbox object
-    -- @param data       Table containing WA entries
-    -- @param offset     Starting index offset into data table
-    -- @param totalLines Number of line frames to update
-    ---
+    --- Local Helper: refresh
+    --- Populates each ScrollBox line with WeakAura set info.
+    -- @param self       ScrollBox  The ScrollBox instance.
+    -- @param data       table      Array returned by PrepareData().
+    -- @param offset     number     Starting index offset into data.
+    -- @param totalLines number     Number of line frames to update.
     local function refresh(self, data, offset, totalLines)
         for i = 1, totalLines do
             local index = i + offset
             local entry = data[index]
-
             if entry then
                 local line = self:GetLine(i)
                 line.waSetID = entry.id
 
-                -- Icon (if valid)
+                -- Icon
                 line.iconTexture:SetTexture("Interface\\AddOns\\EposRaidTools\\Media\\logo_64.tga")
                 line.iconTexture:Show()
 
@@ -85,26 +94,25 @@ function BuildWeakAurasOptions()
         end
     end
 
-    ---
-    -- createLineFunc: create one row in the scrollbox showing icon, name, desc, and delete button
-    -- @param self  Frame Parent scrollbox frame
-    -- @param index number Line index (used for vertical offset)
+    --- Local Helper: createLineFunc
+    --- Creates a single row frame for the ScrollBox: icon, name, desc, delete button.
+    -- @param self  Frame  The parent ScrollBox frame.
+    -- @param index number  Line index (1-based), used for vertical positioning.
     -- @return Frame A configured line frame with:
-    --   - iconTexture   (Texture): WA‐set icon
-    --   - nameLabel     (FontString): WA‐set name
-    --   - descLabel     (FontString): WA‐set description
-    --   - deleteButton  (Button): Remove this WA entry
-    ---
+    --   - iconTexture   (Texture): WeakAura icon.
+    --   - nameLabel     (FontString): WeakAura name.
+    --   - descLabel     (FontString): WeakAura description.
+    --   - deleteButton  (Button): Button to remove this WeakAura ID from fetch list.
     local function createLineFunc(self, index)
-        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        local line = CreateFrame("Frame", "$parentLine"..index, self, "BackdropTemplate")
         line:SetPoint(
-            "TOPLEFT",
-            self,
-            "TOPLEFT",
-            1,
-            -((index - 1) * (self.LineHeight)) - 1
+                "TOPLEFT",
+                self,
+                "TOPLEFT",
+                1,
+                -((index - 1) * ROW_HEIGHT) - 1
         )
-        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        line:SetSize(self:GetWidth() - 2, ROW_HEIGHT)
         DF:ApplyStandardBackdrop(line)
 
         -- Icon (24x24) at left
@@ -112,7 +120,7 @@ function BuildWeakAurasOptions()
         line.iconTexture:SetSize(24, 24)
         line.iconTexture:SetPoint("LEFT", line, "LEFT", 5, 0)
 
-        -- Name label (left of icon + padding)
+        -- Name label (next to icon)
         line.nameLabel = DF:CreateLabel(line, "")
         line.nameLabel:SetPoint("LEFT", line.iconTexture, "RIGHT", 8, 0)
         line.nameLabel:SetWidth(240)
@@ -124,41 +132,47 @@ function BuildWeakAurasOptions()
         line.descLabel:SetJustifyH("LEFT")
 
         -- Delete button (12x12) at far right
-        line.deleteButton = DF:CreateButton(line, function()
-            local id = line.waSetID
-            if not id then return end
+        line.deleteButton = DF:CreateButton(
+                line,
+                function()
+                    local id = line.waSetID
+                    if not id then
+                        return
+                    end
 
-            -- Remove `id` from the “fetch” list
-            local list = EposRT.WeakAurasOptions["fetch"]
-            for i = #list, 1, -1 do
-                if list[i] == id then
-                    tremove(list, i)
-                    break
-                end
-            end
+                    -- Remove id from fetch list
+                    local list = EposRT.WeakAurasOptions.fetch
+                    for i = #list, 1, -1 do
+                        if list[i] == id then
+                            table.remove(list, i)
+                            break
+                        end
+                    end
 
+                    -- Update “show” to first entry or nil
+                    if EposRT.WeakAurasOptions.show == id then
+                        EposRT.WeakAurasOptions.show = list[1] or nil
+                    end
+                    if not next(EposRT.WeakAurasOptions.fetch or {}) then
+                        EposRT.WeakAurasOptions.show = nil
+                    end
 
-            if EposRT.WeakAurasOptions["show"] == id then
-                EposRT.WeakAurasOptions["show"] = EposRT.WeakAurasOptions["fetch"][1] or nil
-            end
+                    -- Refresh the dropdown and tab if they exist
+                    if EposUI and EposUI.weakauras_tab then
+                        local dd = EposUI.weakauras_tab.__waDropdown
+                        if dd then
+                            dd:Refresh()
+                            dd:Select(EposRT.WeakAurasOptions.fetch[1])
+                            EposUI.weakauras_tab:MasterRefresh()
+                        end
+                    end
 
-        if not next(EposRT.WeakAurasOptions.fetch or {}) then
-            EposRT.WeakAurasOptions.show = nil
-        end
-
-            if (EposUI.weakauras_tab) then
-                local dd = EposUI.weakauras_tab.__waDropdown
-                if dd then
-                    dd:Refresh()
-                    dd:Select(EposRT.WeakAurasOptions["fetch"][1])
-                    EposUI.weakauras_tab:MasterRefresh()
-                end
-            end
-
-            -- Refresh the options‐panel scrollbox (that “Delete” button lives in)
-            line:GetParent():MasterRefresh()
-        end, 12, 12)
-
+                    -- Refresh this panel’s scrollbox
+                    line:GetParent():MasterRefresh()
+                end,
+                12,
+                12
+        )
         line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
         line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
         line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
@@ -171,89 +185,85 @@ function BuildWeakAurasOptions()
     end
 
     -- ScrollBox Setup
-    local scrollLines  = 15
-    local rowHeight    = 36
-    local scrollHeight = rowHeight * scrollLines
-    local scrollWidth  = 445
-
     local wa_scrollbox = DF:CreateScrollBox(
-        wa_options_frame,
-        "$parentWeakAurasScrollBox",
-        refresh,
-        {},
-        scrollWidth,   -- width
-        300,           -- height
-        scrollLines,   -- visible rows
-        rowHeight,     -- row height
-        createLineFunc
+            wa_options_frame,
+            "$parentWeakAurasScrollBox",
+            refresh,
+            {},
+            SCROLL_WIDTH,
+            SCROLL_HEIGHT,
+            VISIBLE_ROWS,
+            ROW_HEIGHT,
+            createLineFunc
     )
-
     wa_options_frame.scrollbox = wa_scrollbox
     wa_scrollbox.MasterRefresh = MasterRefresh
-    DF:ReskinSlider(wa_scrollbox)
     wa_scrollbox.ReajustNumFrames = true
+    DF:ReskinSlider(wa_scrollbox)
     wa_scrollbox:SetPoint("TOPLEFT", wa_options_frame, "TOPLEFT", 10, -50)
 
-    -- Create exactly as many line frames as will fit on screen
-    for i = 1, scrollLines do
+    -- Pre-create exactly VISIBLE_ROWS line frames for performance
+    for i = 1, VISIBLE_ROWS do
         wa_scrollbox:CreateLine(createLineFunc)
     end
 
-    -- OnShow: refresh data when panel is shown
+    -- Refresh when the panel is shown
     wa_scrollbox:SetScript("OnShow", function(self)
         self:MasterRefresh()
     end)
 
-    ---
-    -- Input area for adding new WA set ID
-    ---
-    -- Label "New Identifier:"
+    -- Input Area: Add New WeakAura Set ID
     local new_label = DF:CreateLabel(wa_options_frame, "New Identifier:", 11)
     new_label:SetPoint("TOPLEFT", wa_scrollbox, "BOTTOMLEFT", 0, -20)
 
-    -- Text entry for ID input
     local new_entry = DF:CreateTextEntry(wa_options_frame, function() end, 120, 20)
     new_entry:SetPoint("LEFT", new_label, "RIGHT", 10, 0)
-    new_entry:SetTemplate(DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE"))
+    new_entry:SetTemplate(C.templates.dropdown)
 
-    -- Add button to insert the entered WA ID
-    local add_button = DF:CreateButton(wa_options_frame, function()
-        local id = new_entry:GetText():trim()
+    local add_button = DF:CreateButton(
+            wa_options_frame,
+            function()
+                local input = new_entry:GetText():trim()
+                if input == "" then
+                    return
+                end
 
+                -- Avoid duplicates
+                for _, existing in ipairs(EposRT.WeakAurasOptions.fetch) do
+                    if existing == input then
+                        return
+                    end
+                end
 
-        -- Avoid duplicates
-        for _, existing in ipairs(EposRT.WeakAurasOptions["fetch"]) do
-            if existing == id then
-                return
-            end
-        end
+                local waData = WeakAuras and WeakAuras.GetData(input) or nil
+                if not waData then
+                    print("Invalid WeakAura ID: "..input)
+                    return
+                end
 
+                table_insert(EposRT.WeakAurasOptions.fetch, input)
+                EposRT.WeakAurasOptions.show = input
+                new_entry:SetText("")
+                wa_scrollbox:MasterRefresh()
 
-        print(id)
-        local wa = WeakAuras.GetData(id)
-        if not wa then
-            print("Invalid WeakAura")
-            return
-        end
-        tinsert(EposRT.WeakAurasOptions["fetch"], id)
-        EposRT.WeakAurasOptions["show"] = id
-        DevTools_Dump(EposRT.WeakAurasOptions["show"])
-        new_entry:SetText("")
-        wa_scrollbox:MasterRefresh()
-
-        if (EposUI.weakauras_tab) then
-            local dd = EposUI.weakauras_tab.__waDropdown
-            if dd then
-                dd:Refresh()
-                dd:Select(id)
-                EposUI.weakauras_tab:MasterRefresh()
-            end
-        end
-    end, 60, 20, "Add")
-
+                if EposUI and EposUI.weakauras_tab then
+                    local dd = EposUI.weakauras_tab.__waDropdown
+                    if dd then
+                        dd:Refresh()
+                        dd:Select(input)
+                        EposUI.weakauras_tab:MasterRefresh()
+                    end
+                end
+            end,
+            60,
+            20,
+            "Add",
+            nil, nil, nil,
+            C.templates.button
+    )
     add_button:SetPoint("LEFT", new_entry, "RIGHT", 10, 0)
-    add_button:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
 
+    -- Hide Panel by Default
     wa_options_frame:Hide()
     return wa_options_frame
 end

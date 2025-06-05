@@ -1,71 +1,87 @@
--- ui/Crests/CrestsOptionsUI
-local _, Epos = ...
-local DF = _G["DetailsFramework"]
+-- ui/crests/CrestsOptionsUI.lua
 
+local _, Epos = ...
+
+
+-- Cached Globals
+local DF               = _G.DetailsFramework          -- DetailsFramework library
+local UIParent         = _G.UIParent                  -- Parent for UI panels
+local CreateFrame      = _G.CreateFrame               -- Frame creation function
+local table_insert     = table.insert                 -- Table insert function
+local table_sort       = table.sort                   -- Table sort function
+local tonumber         = tonumber                     -- Convert string to number
+local print            = print                        -- Print to chat
+local C                = Epos.Constants               -- Constants table (templates, etc.)
+local C_CurrencyInfo   = _G.C_CurrencyInfo            -- Blizzard API for currency info
+
+
+-- Local Constants
+local PANEL_WIDTH    = 485                            -- Width of the options panel
+local PANEL_HEIGHT   = 420                            -- Height of the options panel
+local SCROLL_WIDTH   = PANEL_WIDTH - 40               -- ScrollBox width (pad 10 each side)
+local SCROLL_HEIGHT  = 300                            -- ScrollBox height
+local ROW_HEIGHT     = 36                             -- Height of each scroll row
+local VISIBLE_ROWS   = 15                             -- Number of visible rows in ScrollBox
+
+--- BuildCrestsOptions()
+-- @return Frame  The created crests options frame (hidden by default).
 function BuildCrestsOptions()
-    -- Create main options panel
+    -- Create the Main Panel
     local crests_options_frame = DF:CreateSimplePanel(
-        UIParent,
-        485,
-        420,
-        "Crests Options",
-        "CrestsOptionsFrame",
-        { DontRightClickClose = true }
+            UIParent,
+            PANEL_WIDTH,
+            PANEL_HEIGHT,
+            "Crests Options",
+            "CrestsOptionsFrame",
+            { DontRightClickClose = true }
     )
     crests_options_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
-    ---
-    -- PrepareData: gather all saved currency entries
-    -- @return table A sorted list of currency data tables, each containing:
-    --   - id          (number): Currency ID
-    --   - name        (string): Currency name or "Invalid ID"
-    --   - description (string): Currency description or empty
-    --   - iconFileID  (number): Icon texture ID or nil
-    ---
+    --- Local Helper: PrepareData
+    --- Gathers all currently fetched currency IDs into a sorted table with info.
+    -- @return table  Array of { id, name, description, iconFileID } entries.
     local function PrepareData()
         local data = {}
-
-        for _, id in pairs(EposRT.CrestsOptions["fetch"]) do
+        for _, id in ipairs(EposRT.CrestsOptions.fetch) do
             local info = C_CurrencyInfo.GetCurrencyInfo(id)
-            local name = info and info.name or "Invalid ID"
-            local description = ""
-            local iconFileID = info and info.iconFileID or nil
+            local name = (info and info.name) or "Invalid ID"
+            local description = (info and info.description) or ""
+            local iconFileID = (info and info.iconFileID) or nil
 
-            tinsert(data, {
-                id = id,
-                name = name,
+            table_insert(data, {
+                id          = id,
+                name        = name,
                 description = description,
-                iconFileID = iconFileID,
+                iconFileID  = iconFileID,
             })
         end
 
-        table.sort(data, function(a, b)
+        table_sort(data, function(a, b)
             return a.id < b.id
         end)
 
         return data
     end
 
-    ---
-    -- MasterRefresh: clears and repopulates the scrollbox with updated data
+    --- Local Helper: MasterRefresh
+    --- Clears and repopulates the ScrollBox with updated currency data.
+    -- @param self  ScrollBox  The ScrollBox instance.
     local function MasterRefresh(self)
         local data = PrepareData()
         self:SetData(data)
         self:Refresh()
     end
 
-    ---
-    -- refresh: populate each scroll line with currency info
-    -- @param self       The scrollbox object
-    -- @param data       Table containing currency entries
-    -- @param offset     Starting index offset into data table
-    -- @param totalLines Number of line frames to update
-    ---
+    --- Local Helper: refresh
+    --- Populates each ScrollBox line with currency icon, name, description.
+    -- @param self       ScrollBox  The ScrollBox instance.
+    -- @param data       table      Array returned by PrepareData().
+    -- @param offset     number     Starting index offset into data.
+    -- @param totalLines number     Number of line frames to update.
     local function refresh(self, data, offset, totalLines)
         for i = 1, totalLines do
             local index = i + offset
             local entry = data[index]
-
             if entry then
                 local line = self:GetLine(i)
                 line.currencyID = entry.id
@@ -81,35 +97,31 @@ function BuildCrestsOptions()
                 -- Name
                 line.nameLabel:SetText(entry.name)
 
-                -- Description (truncate if needed)
+                -- Description (truncate if desired)
                 line.descLabel:SetText(entry.description)
-
-                -- Delete button handler removes by currencyID
-                -- (no extra state needed here)
             end
         end
     end
 
-    ---
-    -- createLineFunc: create one row in the scrollbox showing icon, name, desc, and delete button
-    -- @param self  Frame Parent scrollbox frame
-    -- @param index number Line index (used for vertical offset)
+    --- Local Helper: createLineFunc
+    --- Creates a single row frame for the ScrollBox: icon, name, desc, delete button.
+    -- @param self  Frame  The parent ScrollBox frame.
+    -- @param index number  Line index (1-based), used for vertical positioning.
     -- @return Frame A configured line frame with:
-    --   - iconTexture   (Texture): Currency icon
-    --   - nameLabel     (FontString): Currency name
-    --   - descLabel     (FontString): Currency description
-    --   - deleteButton  (Button): Remove this currency entry
-    ---
+    --   - iconTexture   (Texture): Currency icon.
+    --   - nameLabel     (FontString): Currency name.
+    --   - descLabel     (FontString): Currency description.
+    --   - deleteButton  (Button): Button to remove this currency ID from fetch list.
     local function createLineFunc(self, index)
         local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint(
-            "TOPLEFT",
-            self,
-            "TOPLEFT",
-            1,
-            -((index - 1) * (self.LineHeight)) - 1
+                "TOPLEFT",
+                self,
+                "TOPLEFT",
+                1,
+                -((index - 1) * ROW_HEIGHT) - 1
         )
-        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        line:SetSize(self:GetWidth() - 2, ROW_HEIGHT)
         DF:ApplyStandardBackdrop(line)
 
         -- Icon (24x24) at left
@@ -117,7 +129,7 @@ function BuildCrestsOptions()
         line.iconTexture:SetSize(24, 24)
         line.iconTexture:SetPoint("LEFT", line, "LEFT", 5, 0)
 
-        -- Name label (left of icon + padding)
+        -- Name label (next to icon)
         line.nameLabel = DF:CreateLabel(line, "")
         line.nameLabel:SetPoint("LEFT", line.iconTexture, "RIGHT", 8, 0)
         line.nameLabel:SetWidth(240)
@@ -129,36 +141,42 @@ function BuildCrestsOptions()
         line.descLabel:SetJustifyH("LEFT")
 
         -- Delete button (12x12) at far right
-        line.deleteButton = DF:CreateButton(line, function()
-            local id = line.currencyID
-            if not id then return end
+        line.deleteButton = DF:CreateButton(
+                line,
+                function()
+                    local id = line.currencyID
+                    if not id then
+                        return
+                    end
 
-            -- Remove `id` from the “fetch” list
-            local list = EposRT.CrestsOptions["fetch"]
-            for i = #list, 1, -1 do
-                if list[i] == id then
-                    tremove(list, i)
-                    break
-                end
-            end
+                    -- Remove id from fetch list
+                    local list = EposRT.CrestsOptions.fetch
+                    for i = #list, 1, -1 do
+                        if list[i] == id then
+                            table.remove(list, i)
+                            break
+                        end
+                    end
 
-            EposRT.CrestsOptions["show"] = EposRT.CrestsOptions["fetch"][1] or nil
+                    -- Update “show” to first entry or nil
+                    EposRT.CrestsOptions.show = list[1] or nil
 
-            if (EposUI.crests_tab) then
-                local dd = EposUI.crests_tab.__crestDropdown
-                if dd then
-                    dd:Refresh()
-                    dd:Select(EposRT.CrestsOptions["fetch"][1])
-                    EposUI.crests_tab:MasterRefresh()
-                end
-            end
+                    -- Refresh the dropdown and tab if they exist
+                    if EposUI and EposUI.crests_tab then
+                        local dd = EposUI.crests_tab.__crestDropdown
+                        if dd then
+                            dd:Refresh()
+                            dd:Select(EposRT.CrestsOptions.show)
+                            EposUI.crests_tab:MasterRefresh()
+                        end
+                    end
 
-            -- Refresh the options‐panel scrollbox (that “Delete” button lives in)
-            line:GetParent():MasterRefresh()
-        end, 12, 12)
-
-
-
+                    -- Refresh this options panel’s scrollbox
+                    line:GetParent():MasterRefresh()
+                end,
+                12,
+                12
+        )
         line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
         line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
         line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
@@ -171,90 +189,81 @@ function BuildCrestsOptions()
     end
 
     -- ScrollBox Setup
-    local scrollLines  = 15
-    local rowHeight    = 36
-    local scrollHeight = rowHeight * scrollLines
-    local scrollWidth  = 445
-
     local crests_scrollbox = DF:CreateScrollBox(
-        crests_options_frame,
-        "$parentBlacklistScrollBox",
-        refresh,
-        {},
-        scrollWidth,   -- width
-        300,           -- height
-        scrollLines,   -- visible rows
-        rowHeight,     -- row height
-        createLineFunc
+            crests_options_frame,
+            "$parentCrestsScrollBox",
+            refresh,
+            {},
+            SCROLL_WIDTH,
+            SCROLL_HEIGHT,
+            VISIBLE_ROWS,
+            ROW_HEIGHT,
+            createLineFunc
     )
-
     crests_options_frame.scrollbox = crests_scrollbox
     crests_scrollbox.MasterRefresh = MasterRefresh
     DF:ReskinSlider(crests_scrollbox)
     crests_scrollbox.ReajustNumFrames = true
     crests_scrollbox:SetPoint("TOPLEFT", crests_options_frame, "TOPLEFT", 10, -50)
 
-    -- Create exactly as many line frames as will fit on screen
-    for i = 1, scrollLines do
+    -- Pre-create exactly VISIBLE_ROWS line frames for performance
+    for i = 1, VISIBLE_ROWS do
         crests_scrollbox:CreateLine(createLineFunc)
     end
 
-    -- OnShow: refresh data when panel is shown
+    -- Refresh when the panel is shown
     crests_scrollbox:SetScript("OnShow", function(self)
         self:MasterRefresh()
     end)
 
-    ---
-    -- Input area for adding new currency ID
-    ---
-    -- Label "New Identifier:"
+    -- Input Area: Add New Currency ID
     local new_label = DF:CreateLabel(crests_options_frame, "New Identifier:", 11)
     new_label:SetPoint("TOPLEFT", crests_scrollbox, "BOTTOMLEFT", 0, -20)
 
-    -- Text entry for ID input
     local new_entry = DF:CreateTextEntry(crests_options_frame, function() end, 120, 20)
     new_entry:SetPoint("LEFT", new_label, "RIGHT", 10, 0)
-    new_entry:SetTemplate(DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE"))
+    new_entry:SetTemplate(C.templates.dropdown)
 
-    -- Add button to insert the entered currency ID
-    local add_button = DF:CreateButton(crests_options_frame, function()
-        local text = new_entry:GetText():trim()
-        local id = tonumber(text)
+    local add_button = DF:CreateButton(
+            crests_options_frame,
+            function()
+                local text = new_entry:GetText():trim()
+                local id = tonumber(text)
+                if not id then
+                    print("Invalid currency ID. Please enter a number.")
+                    return
+                end
 
-        if not id then
-            print("Invalid currency ID. Please enter a number.")
-            return
-        end
+                -- Avoid duplicates
+                for _, existing in ipairs(EposRT.CrestsOptions.fetch) do
+                    if existing == id then
+                        return
+                    end
+                end
 
-        -- Avoid duplicates
-        for _, existing in ipairs(EposRT.CrestsOptions["fetch"]) do
-            if existing == id then
-                return
-            end
-        end
+                table_insert(EposRT.CrestsOptions.fetch, id)
+                EposRT.CrestsOptions.show = id
+                new_entry:SetText("")
+                crests_scrollbox:MasterRefresh()
 
-        tinsert(EposRT.CrestsOptions["fetch"], id)
-        EposRT.CrestsOptions["show"] = id
-        new_entry:SetText("")
-        crests_scrollbox:MasterRefresh()
-
-        print("before refresh")
-        if (EposUI.crests_tab) then
-            print("after first refresh")
-
-            -- Force the dropdown to rebuild its menu
-            local dd = EposUI.crests_tab.__crestDropdown
-            if dd then
-                dd:Refresh()
-                dd:Select(id)
-                EposUI.crests_tab:MasterRefresh()
-            end
-        end
-    end, 60, 20, "Add")
-
+                if EposUI and EposUI.crests_tab then
+                    local dd = EposUI.crests_tab.__crestDropdown
+                    if dd then
+                        dd:Refresh()
+                        dd:Select(id)
+                        EposUI.crests_tab:MasterRefresh()
+                    end
+                end
+            end,
+            60,
+            20,
+            "Add",
+            nil, nil, nil,
+            C.templates.button
+    )
     add_button:SetPoint("LEFT", new_entry, "RIGHT", 10, 0)
-    add_button:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
 
+    -- Hide Panel by Default
     crests_options_frame:Hide()
     return crests_options_frame
 end

@@ -1,126 +1,150 @@
-local _, Epos = ...
-local DF = _G["DetailsFramework"]
+-- ui/roster/BuildTrackingOptions.lua
 
+local _, Epos   = ...                                     -- AddOn namespace
+local DF        = _G.DetailsFramework                     -- DetailsFramework library
+local UIParent  = _G.UIParent                             -- Blizzard UI parent frame
+local C         = Epos.Constants                          -- Constants (window sizes, templates, etc.)
+
+-- Guild ranks that can be toggled for tracking
+local RANKS = {
+    "Guildlead",
+    "Officer",
+    "Officer Alt",
+    "Raider",
+    "Raid Alt",
+    "Trial",
+}
+
+--- BuildTrackingOptions()
+-- @return Frame tracking_options_frame
 function BuildTrackingOptions()
+    -- Create the Main Options Panel
     local tracking_options_frame = DF:CreateSimplePanel(
-        UIParent,
-        485,
-        420,
-        "Roles Management",
-        "RolesEditFrame",
-        { DontRightClickClose = true }
+            UIParent,
+            485,
+            420,
+            "Roles Management",
+            "RolesEditFrame",
+            { DontRightClickClose = true }
     )
     tracking_options_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
-    local ranks = {
-        "Guildlead",
-        "Officer",
-        "Officer Alt",
-        "Raider",
-        "Raid Alt",
-        "Trial",
+    -- Build the Options Table
+    local options = {}
+
+    -- Section: Track Guild Ranks Label
+    options[#options + 1] = {
+        type          = "label",
+        get           = function() return "Track Guild Ranks" end,
+        text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
     }
 
-    local options = {
-        {
-            type          = "label",
-            get           = function() return "Track guild ranks" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-    }
-
-    for _, rank in ipairs(ranks) do
-        table.insert(options, {
+    -- Toggles for each rank
+    for _, rankName in ipairs(RANKS) do
+        options[#options + 1] = {
             type     = "toggle",
             boxfirst = true,
-            name     = rank,
-            desc     = "Enable or disable tracking for " .. rank,
+            name     = rankName,
+            desc     = "Enable or disable tracking for " .. rankName,
             get      = function()
-                return EposRT.Settings.TrackedRoles[rank]
+                -- Default to true if not set
+                if EposRT.Settings.TrackedRoles[rankName] == nil then
+                    EposRT.Settings.TrackedRoles[rankName] = true
+                end
+                return EposRT.Settings.TrackedRoles[rankName]
             end,
-            set = function(_, _, value)
-                EposRT.Settings.TrackedRoles[rank] = value
-                if EposUI.roster_tab then
+            set      = function(_, _, value)
+                EposRT.Settings.TrackedRoles[rankName] = value
+                if EposUI and EposUI.roster_tab then
                     EposUI.roster_tab:MasterRefresh()
                 end
             end,
             nocombat = true,
-        })
+        }
     end
 
-    table.insert(options, { type = "break" })
+    -- Spacer
+    options[#options + 1] = { type = "break" }
 
-    table.insert(options, {
+    -- Section: Automatic Background Update Label
+    options[#options + 1] = {
         type          = "label",
-        get           = function() return "Automatic background update" end,
+        get           = function() return "Automatic Background Update" end,
         text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-    })
+    }
 
-    -- Sample saved-vars for interval fetching
-    EposSaved = EposSaved or {}
-    EposSaved.enableIntervalFetching = EposSaved.enableIntervalFetching or false
-    EposSaved.fetchInterval = EposSaved.fetchInterval or 10
+    ---- Toggle: Enable Interval Fetching
+    --options[#options + 1] = {
+    --    type     = "toggle",
+    --    boxfirst = true,
+    --    name     = "Enable Interval Fetching",
+    --    desc     = "Enable periodic roster updates",
+    --    get      = function() return EposSaved.enableIntervalFetching end,
+    --    set      = function(_, _, value)
+    --        EposSaved.enableIntervalFetching = value
+    --    end,
+    --    nocombat = true,
+    --}
 
-    table.insert(options, {
-        type     = "toggle",
-        boxfirst = true,
-        name     = "Enable Interval Fetching",
-        desc     = "Enable periodic roster updates",
-        get      = function() return EposSaved.enableIntervalFetching end,
-        set      = function(_, _, value) EposSaved.enableIntervalFetching = value end,
-        nocombat = true,
-    })
+    ---- Slider: Interval (Seconds)
+    --options[#options + 1] = {
+    --    type     = "slider",
+    --    name     = "Interval (Seconds)",
+    --    desc     = "How often to fetch updated roster info",
+    --    min      = 1,
+    --    max      = 60,
+    --    step     = 1,
+    --    get      = function() return EposSaved.fetchInterval end,
+    --    set      = function(_, _, value)
+    --        EposSaved.fetchInterval = value
+    --    end,
+    --    disabled = function() return not EposSaved.enableIntervalFetching end,
+    --    nocombat = true,
+    --}
 
-    table.insert(options, {
-        type     = "slider",
-        name     = "Interval (Seconds)",
-        desc     = "How often to fetch updated roster info",
-        min      = 1,
-        max      = 60,
-        step     = 1,
-        get      = function() return EposSaved.fetchInterval end,
-        set      = function(_, _, value) EposSaved.fetchInterval = value end,
-        disabled = function() return not EposSaved.enableIntervalFetching end,
-        nocombat = true,
-    })
+    -- Spacer
+    options[#options + 1] = { type = "break" }
 
-    table.insert(options, { type = "break" })
-
-    table.insert(options, {
+    -- Section: Blacklist & Whitelist Label
+    options[#options + 1] = {
         type          = "label",
         get           = function() return "Blacklist & Whitelist" end,
         text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-    })
+    }
 
-    -- "Edit Blacklist" as a menu-button
-    table.insert(options, {
+    -- Button: Edit Blacklist
+    options[#options + 1] = {
         type = "execute",
         name = "Edit Blacklist",
         desc = "Manually add players to the tracking blacklist",
         func = function()
             if EposUI and EposUI.blacklist_frame then
-                EposUI.database_options:Hide()
+                -- Hide the tracking options panel and show the blacklist UI
+                tracking_options_frame:Hide()
                 EposUI.blacklist_frame:Show()
             end
         end,
-    })
+    }
 
+    -- Build the Menu Using Constants for Templates
     DF:BuildMenu(
-        tracking_options_frame,
-        options,
-        10,
-        -30,  -- x, y offset
-        380,
-        false,
-        DF:GetTemplate("font", "OPTIONS_FONT_TEMPLATE"),
-        DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE"),
-        DF:GetTemplate("switch", "OPTIONS_CHECKBOX_TEMPLATE"),
-        true,
-        DF:GetTemplate("slider", "OPTIONS_SLIDER_TEMPLATE"),
-        DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"),
-        nil
+            tracking_options_frame,
+            options,
+            10,
+            -30,
+            380,
+            false,
+            C.templates.text,
+            C.templates.dropdown,
+            C.templates.switch,
+            true,
+            C.templates.slider,
+            C.templates.button,
+            nil
     )
 
+    -- Initially hide the frame; shown when user clicks “Roles Management”
     tracking_options_frame:Hide()
+
     return tracking_options_frame
 end

@@ -1,186 +1,246 @@
 -- ui/EposUI.lua
-local _, Epos = ...
-local C = Epos.Constants
-local DF = _G["DetailsFramework"]
-local LDB = LibStub("LibDataBroker-1.1")
-local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
-local WA = _G["WeakAuras"]
 
+local _, Epos  = ...
 
-local ui_panel_options = {
-    UseStatusBar = true
+local C        = Epos.Constants                         -- Constants for dimensions, templates, colors
+local DF       = _G.DetailsFramework                    -- Cached DetailsFramework
+local UIParent = _G.UIParent                            -- Parent frame for UI panels
+local LibStub  = _G.LibStub                             -- LibStub for library access
+local LDB      = LibStub("LibDataBroker-1.1", true)     -- LibStub LDB
+local LDBIcon  = LDB and LibStub("LibDBIcon-1.0", true) -- LibStub LDBIcon
+local WA       = _G.WeakAuras                           -- WeakAuras global (if loaded)
+local C_AddOns = _G.C_AddOns                            -- Blizzard API for AddOn metadata
+
+--- Panel Options
+-- Options passed to CreateSimplePanel; here we enable the status bar
+local PANEL_OPTIONS = {
+    UseStatusBar = true,
 }
-
+--- Returns a new frame with a decorative title bar and status bar.
 local EposUI = DF:CreateSimplePanel(
-    UIParent,
-    C.window_width,
-    C.window_height,
-    "|cFF00FFFFEpos|r Raid Tools",
-    "EposUI",
-    ui_panel_options
+        UIParent,
+        C.window_width,
+        C.window_height,
+        "|cFF00FFFFEpos|r Raid Tools",
+        "EposUI",
+        PANEL_OPTIONS
 )
 EposUI:SetPoint("CENTER")
 EposUI:SetFrameStrata("HIGH")
+
+-- Build author info on the status bar (replace “bird” with actual author)
 DF:BuildStatusbarAuthorInfo(EposUI.StatusBar, _, "x |cFF00FFFFbird|r")
+
+-- Set a placeholder for Discord or other text entry
 EposUI.StatusBar.discordTextEntry:SetText("badbluu")
 
+--- EposUI:Init
+--- Initializes the UI: creates a scale bar, builds tab container,
+--  constructs menus for each tab, and sets version text on the status bar.
 function EposUI:Init()
-    DF:CreateScaleBar(EposUI, EposRT.EposUI)
-    EposUI:SetScale(EposRT.EposUI.scale)
+    -- Ensure SavedVariables for UI scale exist
+    EposRT.EposUI = EposRT.EposUI or { scale = 1 }
 
-    -- Create the tab container
+    -- Create and apply a scale slider for the main panel
+    DF:CreateScaleBar(self, EposRT.EposUI)
+    self:SetScale(EposRT.EposUI.scale)
+
+    -- ------------------------------------------------------------------------
+    -- Create Tab Container
+    -- ------------------------------------------------------------------------
+    local TAB_LAYOUT = {
+        { name = "Database",  text = "Database"  },
+        { name = "Crests",    text = "Crests"    },
+        { name = "WeakAuras", text = "WeakAuras" },
+        { name = "AddOns",    text = "AddOns"    },
+        { name = "Settings",  text = "Settings"  },
+        { name = "Setup",     text = "Setup"     },
+    }
+    local CONTAINER_OPTIONS = {
+        width               = C.window_width,
+        height              = C.window_height - 5,
+        backdrop_color      = { 0, 0, 0, 0.2 },
+        backdrop_border_color = { 0.1, 0.1, 0.1, 0.4 },
+    }
+
     local tabContainer = DF:CreateTabContainer(
-        EposUI,
-        "Epos",
-        "EposUI_Tab",
-        {
-            { name = "Database",  text = "Database"  },
-            { name = "Crests",    text = "Crests"    },
-            { name = "WeakAuras", text = "WeakAuras" },
-            { name = "AddOns",    text = "AddOns"    },
-            { name = "Settings",  text = "Settings"  },
-            { name = "Setup",     text = "Setup"     },
-        },
-        {
-            width                 = C.window_width,
-            height                = C.window_height - 5,
-            backdrop_color        = { 0, 0, 0, 0.2 },
-            backdrop_border_color = { 0.1, 0.1, 0.1, 0.4 },
-        }
+            self,
+            "Epos",
+            "EposUI_Tab",
+            TAB_LAYOUT,
+            CONTAINER_OPTIONS
     )
-    tabContainer:SetPoint("CENTER", EposUI, "CENTER", 0, 0)
+    tabContainer:SetPoint("CENTER", self, "CENTER", 0, 0)
 
-    local roster_tab    = tabContainer:GetTabFrameByName("Database")
-    local crests_tab    = tabContainer:GetTabFrameByName("Crests")
-    local weakauras_tab = tabContainer:GetTabFrameByName("WeakAuras")
-    local addons_tab    = tabContainer:GetTabFrameByName("AddOns")
-    local settings_tab  = tabContainer:GetTabFrameByName("Settings")
-    local setup_tab     = tabContainer:GetTabFrameByName("Setup")
+    -- Retrieve each tab frame for later content building
+    local rosterTab     = tabContainer:GetTabFrameByName("Database")
+    local crestsTab     = tabContainer:GetTabFrameByName("Crests")
+    local weakaurasTab  = tabContainer:GetTabFrameByName("WeakAuras")
+    local addonsTab     = tabContainer:GetTabFrameByName("AddOns")
+    local settingsTab   = tabContainer:GetTabFrameByName("Settings")
+    local setupTab      = tabContainer:GetTabFrameByName("Setup")
 
-    local settings_options_table = {
+    --- Settings Menu Construction
+    -- Table of option descriptors passed to BuildMenu on the Settings tab
+    local settingsOptions = {
         {
             type          = "label",
             get           = function() return "General Options" end,
             text_template = C.templates.text,
         },
         {
-            type = "toggle",
+            type     = "toggle",
             boxfirst = true,
-            name = "Disable Minimap Button",
-            desc = "Hide the minimap button.",
-            get = function() return EposRT.Settings["Minimap"].hide end,
-            set = function(self, fixedParam, value)
-                EposRT.Settings["Minimap"].hide = value
-                LDBIcon:Refresh("EposRT", EposRT.Settings["Minimap"])
+            name     = "Disable Minimap Button",
+            desc     = "Hide the minimap button.",
+            get      = function()
+                EposRT.Settings = EposRT.Settings or {}
+                EposRT.Settings.Minimap = EposRT.Settings.Minimap or { hide = false }
+                return EposRT.Settings.Minimap.hide
+            end,
+            set      = function(_, _, value)
+                EposRT.Settings.Minimap.hide = value
+                if LDBIcon then
+                    LDBIcon:Refresh("EposRT", EposRT.Settings.Minimap)
+                end
             end,
         },
         {
-            type = "toggle",
+            type     = "toggle",
             boxfirst = true,
-            name = "Enable Debug Mode",
-            desc = "Enables Debug Mode, which bypasses certain restrictions like checking for active encounter / combat / being in a raid",
-            get = function() return EposRT.Settings["Debug"] end,
-            set = function(self, fixedParam, value)
-                EposRT.Settings["Debug"] = value
+            name     = "Enable Debug Mode",
+            desc     = "Bypass encounter/combat/raid restrictions for testing.",
+            get      = function()
+                EposRT.Settings = EposRT.Settings or {}
+                return EposRT.Settings.Debug or false
+            end,
+            set      = function(_, _, value)
+                EposRT.Settings.Debug = value
             end,
         },
         { type = "break" },
         {
-            type = "select",
-            get = function() return "MEDIUM" end,
-            values = function() return {} end,
-            name = "Frame Strata",
-            desc = "Choose Frame Strata for Epos Raid Tools.",
+            type    = "select",
+            get     = function() return "MEDIUM" end,
+            values  = function() return {} end,
+            name    = "Frame Strata",
+            desc    = "Choose Frame Strata for Epos Raid Tools.",
             nocombat = true,
         },
         {
             type = "execute",
             name = "Clear EposRT Data",
-            desc = "This will erase all EposRT saved settings and reload the UI.",
+            desc = "Erase all saved settings and reload the UI.",
             func = function()
-                for k, v in pairs(DF) do
-                    if type(v) == "function" then
-                        print(k, v)
+                -- Example placeholder: print all DF functions
+                for key, val in pairs(DF) do
+                    if type(val) == "function" then
+                        print(key, val)
                     end
                 end
             end,
-        }
+        },
     }
 
-    -- AddOns tab (empty menu)
+    -- Build Empty/AddOn & Setup Menus
+    local menuX      = 10
+    local menuY      = -100
+    local menuHeight = C.window_height - 10
+
+    -- AddOns tab uses an empty/options placeholder
     DF:BuildMenu(
-        addons_tab,
-        {},
-        10, -100,
-        C.window_height - 10,
-        false,
-        C.templates.text,
-        C.templates.dropdown,
-        C.templates.switch,
-        true,
-        C.templates.slider,
-        C.templates.button,
-        nil
+            addonsTab,
+            {},
+            menuX, menuY,
+            menuHeight,
+            false,
+            C.templates.text,
+            C.templates.dropdown,
+            C.templates.switch,
+            true,
+            C.templates.slider,
+            C.templates.button,
+            nil
     )
 
-    -- Settings tab
+    -- Settings tab with actual settings options
     DF:BuildMenu(
-        settings_tab,
-        settings_options_table,
-        10, -100,
-        C.window_height - 10,
-        false,
-        C.templates.text,
-        C.templates.dropdown,
-        C.templates.switch,
-        true,
-        C.templates.slider,
-        C.templates.button,
-        nil
+            settingsTab,
+            settingsOptions,
+            menuX, menuY,
+            menuHeight,
+            false,
+            C.templates.text,
+            C.templates.dropdown,
+            C.templates.switch,
+            true,
+            C.templates.slider,
+            C.templates.button,
+            nil
     )
 
-    -- Setup tab (empty menu)
+    -- Setup tab also empty for now
     DF:BuildMenu(
-        setup_tab,
-        {},
-        10, -100,
-        C.window_height - 10,
-        false,
-        C.templates.text,
-        C.templates.dropdown,
-        C.templates.switch,
-        true,
-        C.templates.slider,
-        C.templates.button,
-        nil
+            setupTab,
+            {},
+            menuX, menuY,
+            menuHeight,
+            false,
+            C.templates.text,
+            C.templates.dropdown,
+            C.templates.switch,
+            true,
+            C.templates.slider,
+            C.templates.button,
+            nil
     )
 
-    -- Build roster UI
-    EposUI.roster_tab       = BuildRosterTab(roster_tab)
-    EposUI.database_options = BuildTrackingOptions()
-    EposUI.blacklist_frame  = BuildBlacklistUI()
+    -- Build Database (Roster) UI
+    if BuildRosterTab then
+        self.roster_tab = BuildRosterTab(rosterTab)
+    end
+    if BuildTrackingOptions then
+        self.database_options = BuildTrackingOptions()
+    end
+    if BuildBlacklistUI then
+        self.blacklist_frame = BuildBlacklistUI()
+    end
 
-    -- Build crest UI
-    EposUI.crests_tab       = BuildCrestsTab(crests_tab)
-    EposUI.crests_options   = BuildCrestsOptions()
+    -- Build Crests UI
+    if BuildCrestsTab then
+        self.crests_tab = BuildCrestsTab(crestsTab)
+    end
+    if BuildCrestsOptions then
+        self.crests_options = BuildCrestsOptions()
+    end
 
-    -- WeakAuras UI
-    EposUI.weakauras_tab    = BuildWeakAurasTab(weakauras_tab)
-    EposUI.weakauras_options   = BuildWeakAurasOptions()
+    -- Build WeakAuras UI
+    if BuildWeakAurasTab then
+        self.weakauras_tab = BuildWeakAurasTab(weakaurasTab)
+    end
+    if BuildWeakAurasOptions then
+        self.weakauras_options = BuildWeakAurasOptions()
+    end
 
-    -- Version number in status bar
-    local versionTitle = C_AddOns.GetAddOnMetadata("EposRaidTools", "Title")
-    local versionNumber = C_AddOns.GetAddOnMetadata("EposRaidTools", "Version")
-    local statusBarText = versionTitle .. " v" .. versionNumber
-    EposUI.StatusBar.authorName:SetText(statusBarText)
-end
 
-function EposUI:ToggleMainFrame()
-    if EposUI:IsShown() then
-        EposUI:Hide()
-    else
-        EposUI:Show()
+    -- Display Version in Status Bar
+    local title       = C_AddOns.GetAddOnMetadata("EposRaidTools", "Title") or "Epos Raid Tools"
+    local version     = C_AddOns.GetAddOnMetadata("EposRaidTools", "Version") or "?.?.?"
+    local statusText  = title .. " v" .. version
+    if self.StatusBar and self.StatusBar.authorName then
+        self.StatusBar.authorName:SetText(statusText)
     end
 end
 
+--- EposUI:ToggleMainFrame
+--- Toggles visibility of the main UI panel.
+function EposUI:ToggleMainFrame()
+    if self:IsShown() then
+        self:Hide()
+    else
+        self:Show()
+    end
+end
+
+-- Assign EposUI to the AddOn namespace for external access
 Epos.EposUI = EposUI

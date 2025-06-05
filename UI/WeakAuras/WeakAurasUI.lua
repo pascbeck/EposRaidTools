@@ -1,77 +1,112 @@
--- ui/WeakAuras/WeakAurasUI
+-- ui/weakauras/WeakAurasUI.lua
+
 local _, Epos = ...
-local DF = _G["DetailsFramework"]
 
+-- Cached Globals
+local DF                = _G.DetailsFramework              -- DetailsFramework library
+local CreateFrame       = _G.CreateFrame                   -- Frame creation function
+local RAID_CLASS_COLORS = _G.RAID_CLASS_COLORS             -- Class color lookup
+local date              = _G.date                          -- Lua date function
+local table_insert      = table.insert                     -- Table insert function
+local table_sort        = table.sort                       -- Table sort function
+local C                 = Epos.Constants                   -- Constants table (templates, sizes, colors)
+
+-- BuildWeakAurasTab()
+-- @param parent Frame  The parent frame (tab content) to which the WA UI is added.
+-- @return Frame  The created scrollbox instance, with a `MasterRefresh()` method and dropdown reference.
 function BuildWeakAurasTab(parent)
-    --- Shortcut to our constants table
-    local C = Epos.Constants
-
-    --- Buttons
-
-    -- "Request Data" Button (far right)
+    -- “Request Data” Button (far right)
     local requestDataButton = DF:CreateButton(
-        parent,
-        function() EposUI.weakauras_options:Show() end,  -- click handler shows options
-        C.tabs.buttonWidth,
-        C.tabs.buttonHeight,
-        "Request Data",                              -- button text
-        nil, nil, nil, nil, nil, nil,                -- unused padding/anchor arguments
-        C.templates.button
+            parent,
+            function()
+                if EposUI and EposUI.weakauras_options then
+                    EposUI.weakauras_options:Show()
+                end
+            end,
+            C.tabs.buttonWidth,
+            C.tabs.buttonHeight,
+            "Request Data",
+            nil, nil, nil, nil, nil, nil,
+            C.templates.button
     )
-    requestDataButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", C.tabs.rightPadding, C.tabs.startY)
+    requestDataButton:SetPoint(
+            "TOPRIGHT",
+            parent,
+            "TOPRIGHT",
+            C.tabs.rightPadding,
+            C.tabs.startY
+    )
     requestDataButton:SetAlpha(1)
-    requestDataButton.tooltip = "Request data from currently selected players"
+    requestDataButton.tooltip = "Request data for current selected players"
 
-    -- "WeakAuras Options" Button (far left)
-    local weakaurasOption = DF:CreateButton(
-        parent,
-        function() EposUI.weakauras_options:Show() end,  -- click handler shows options
-        C.tabs.buttonWidth,
-        C.tabs.buttonHeight,
-        "WeakAuras Options",                            -- button text
-        nil, nil, nil, nil, nil, nil,                   -- unused padding/anchor arguments
-        C.templates.button
+    -- “WeakAuras Options” Button (far left)
+    local waOptionsButton = DF:CreateButton(
+            parent,
+            function()
+                if EposUI and EposUI.weakauras_options then
+                    EposUI.weakauras_options:Show()
+                end
+            end,
+            C.tabs.buttonWidth,
+            C.tabs.buttonHeight,
+            "WeakAuras Options",
+            nil, nil, nil, nil, nil, nil,
+            C.templates.button
     )
-    weakaurasOption:SetPoint("TOPLEFT", parent, "TOPLEFT", C.tabs.leftPadding, C.tabs.startY)
-    weakaurasOption:SetAlpha(1)
-    weakaurasOption.tooltip = "Manually add players to the WA tracking blacklist"
+    waOptionsButton:SetPoint(
+            "TOPLEFT",
+            parent,
+            "TOPLEFT",
+            C.tabs.leftPadding,
+            C.tabs.startY
+    )
+    waOptionsButton:SetAlpha(1)
+    waOptionsButton.tooltip = "Open WeakAuras Options panel"
 
-    --- Dropdown to select which WA set to show
+    -- WA Set Selection Dropdown
     local waMenuDropdown
-    local function waMenuDropdownOptions()
+    --- Collects dropdown entries for each WA set ID in fetch list.
+    -- @return table Array of { label, value, onclick } entries for DF:CreateDropDown
+    local function GetWADropdownOptions()
         local t = {}
-        for i, waSetID in ipairs(EposRT.WeakAurasOptions["fetch"]) do
-
-
-            tinsert(t, {
+        for _, waSetID in ipairs(EposRT.WeakAurasOptions.fetch) do
+            table_insert(t, {
                 label = waSetID,
                 value = waSetID,
                 onclick = function(_, _, value)
-                    EposRT.WeakAurasOptions["show"] = value
-                    if (EposUI.weakauras_tab) then
+                    EposRT.WeakAurasOptions.show = value
+                    if EposUI and EposUI.weakauras_tab then
                         EposUI.weakauras_tab:MasterRefresh()
                     end
-                end
+                end,
             })
         end
         return t
     end
 
-    waMenuDropdown =
-        DF:CreateDropDown(
+    waMenuDropdown = DF:CreateDropDown(
             parent,
-            waMenuDropdownOptions,
-            EposRT.WeakAurasOptions["show"],
+            GetWADropdownOptions,
+            EposRT.WeakAurasOptions.show,
             200,
             30
-        )
+    )
     waMenuDropdown:SetTemplate("OPTIONS_DROPDOWN_TEMPLATE")
-    waMenuDropdown:SetPoint("LEFT", weakaurasOption, "RIGHT", 15, 0)
+    waMenuDropdown:SetPoint("LEFT", waOptionsButton, "RIGHT", 15, 0)
 
-    --- Header Frame for column titles
+    -- Header Frame (Column Titles)
     local header = CreateFrame("Frame", "$parentHeader", parent, "BackdropTemplate")
-    header:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, C.tabs.startY - 30)
-    header:SetSize(C.window_width - 40, C.tabs.lineHeight)
+    header:SetPoint(
+            "TOPLEFT",
+            parent,
+            "TOPLEFT",
+            10,
+            C.tabs.startY - 30
+    )
+    header:SetSize(
+            C.window_width - 40,
+            C.tabs.lineHeight
+    )
     DF:ApplyStandardBackdrop(header)
 
     -- Column: Name
@@ -79,143 +114,126 @@ function BuildWeakAurasTab(parent)
     header.nameLabel:SetPoint("LEFT", header, "LEFT", 5, 0)
     header.nameLabel:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
-    -- Column: WeakAuras
+    -- Column: Installed
     header.weakaurasLabel = DF:CreateLabel(header, "Installed")
     header.weakaurasLabel:SetPoint("LEFT", header, "LEFT", 185, 0)
     header.weakaurasLabel:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
-    -- Column: WeakAuras
-    header.version = DF:CreateLabel(header, "Version")
-    header.version:SetPoint("LEFT", header, "LEFT", 300, 0)
-    header.version:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
+    -- Column: Version
+    header.versionLabel = DF:CreateLabel(header, "Version")
+    header.versionLabel:SetPoint("LEFT", header, "LEFT", 300, 0)
+    header.versionLabel:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
-    -- Column: WeakAuras
-    header.loaded = DF:CreateLabel(header, "Loaded")
-    header.loaded:SetPoint("LEFT", header, "LEFT", 400, 0)
-    header.loaded:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
+    -- Column: Loaded
+    header.loadedLabel = DF:CreateLabel(header, "Loaded")
+    header.loadedLabel:SetPoint("LEFT", header, "LEFT", 400, 0)
+    header.loadedLabel:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
-    -- Column: WeakAuras
-    header.updated = DF:CreateLabel(header, "Updated")
-    header.updated:SetPoint("LEFT", header, "LEFT", 500, 0)
-    header.updated:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
+    -- Column: Updated
+    header.updatedLabel = DF:CreateLabel(header, "Updated")
+    header.updatedLabel:SetPoint("LEFT", header, "LEFT", 500, 0)
+    header.updatedLabel:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
-    --- Refresh function to populate each line with data
-    -- @param self       The scrollbox object that holds all line frames
-    -- @param data       Table containing player entries
-    -- @param offset     Starting index offset into the data table
-    -- @param totalLines Number of line frames to update
-    local function refresh(self, data, offset, totalLines)
-        for i = 1, totalLines do
-            local index     = i + offset
-            local dataEntry = data[index]
-
-            if dataEntry then
-                local line = self:GetLine(i)
-
-                -- 1) Color the “name” by class (fallback to white if class missing)
-                local classColor = RAID_CLASS_COLORS[dataEntry.class or "PRIEST"] or { r = 1, g = 1, b = 1 }
-                line.name:SetText(dataEntry.name)
-                line.name:SetTextColor(classColor.r, classColor.g, classColor.b)
-
-                line.version:SetText(dataEntry.version)
-                line.weakauras:SetText(dataEntry.installed)
-                line.updated:SetText(dataEntry.ts)
-
-                if dataEntry.installed == "True" then
-                    line.weakauras:SetTextColor(0, 1, 0)  -- green
-                else
-                    line.weakauras:SetTextColor(1, 0, 0)  -- red
-                end
-
-                line.loaded:SetText(tostring(dataEntry.loaded))
-
-                if dataEntry.loaded == "True" then
-                    line.loaded:SetTextColor(0, 1, 0)  -- green
-                else
-                    line.loaded:SetTextColor(1, 0, 0)  -- red
-                end
-            end
-        end
-    end
-
-    --- Prepares and returns filtered, formatted player WA data.
-    -- Gathers information from the guild roster and player database,
-    -- filters based on tracked roles and blacklist, and collects
-    -- WA-related values for each valid player.
-    --
-    -- @return table A sorted list of player data tables, each containing:
-    --   - name      (string): Player's name
-    --   - class     (string): Player's class
-    --   - weakauras (table):  List of WA tables { name, version }
+    --- Local Helper: PrepareData
+    --- Gathers and returns each tracked player’s WA data for the selected set ID.
+    -- Filters out players not tracked or blacklisted, then collects WA status fields.
+    -- @return table  Array of { name, class, installed, version, loaded, ts, rank } entries.
     local function PrepareData()
         local data = {}
-        local trackedRoles = EposRT.Settings and EposRT.Settings.TrackedRoles or {}
+        local trackedRoles = (EposRT.Settings and EposRT.Settings.TrackedRoles) or {}
 
-        for _, player in ipairs(EposRT.GuildRoster) do
-            local db = EposRT.PlayerDatabase[player.name]  -- database entry for this player
-            if db then
-                local weakaura                = db.weakaura[EposRT.WeakAurasOptions["show"]]
-                print("123")
-                DevTools_Dump(weakaura)
-                print("123")
-                local timestamp           = db.timestamp and
-                date("%Y-%m-%d %H:%M", db.timestamp) or
-                "-"
+        for _, player in ipairs(EposRT.GuildRoster or {}) do
+            local dbEntry = (EposRT.PlayerDatabase or {})[player.name]
+            if dbEntry and next(EposRT.WeakAurasOptions.fetch) then
+                local waData = (dbEntry.weakaura or {})[EposRT.WeakAurasOptions.show]
+                local timestamp = dbEntry.timestamp and date("%Y-%m-%d %H:%M", dbEntry.timestamp) or "-"
 
-                if next(EposRT.WeakAurasOptions.fetch) then
-                    if trackedRoles[player.rank] and not EposRT.Blacklist[player.name] then
-                        table.insert(data, {
-                            name = player.name,
-                            class = player.class,
-                            rank = player.rank,
-                            id = weakaura and weakaura.id or "-",
-                            version = weakaura and weakaura.semver or "-",
-                            url = weakaura and weakaura.url or "-",
-                            icon = weakaura and  weakaura.displayIcon or "-",
-                            ts = timestamp,
-                            loaded = weakaura and weakaura.isLoaded and "True" or "False",
-                            installed = weakaura and weakaura.id and "True" or "False"
-                        })
-                    end
+                if trackedRoles[player.rank] and not ((EposRT.Blacklist or {})[player.name]) then
+                    table_insert(data, {
+                        name      = player.name,
+                        class     = player.class,
+                        rank      = player.rank,
+                        installed = waData and "True" or "False",
+                        version   = waData and (waData.semver or "-") or "-",
+                        loaded    = waData and (waData.isLoaded and "True" or "False") or "False",
+                        ts        = timestamp,
+                    })
                 end
-
             end
         end
 
-        -- Sort players by rank ascending, then by name
-        table.sort(data, function(a, b)
-            return a.rank < b.rank
+        -- Sort by rank ascending, then by name
+        table_sort(data, function(a, b)
+            if a.rank ~= b.rank then
+                return a.rank < b.rank
+            end
+            return a.name < b.name
         end)
 
         return data
     end
 
-    --- MasterRefresh: clears existing data and repopulates the scrollbox
-    -- @param self The scrollbox object
-    local function MasterRefresh(self)
-        local data = PrepareData()
-        self:SetData({})
-        self:SetData(data)
-        self:Refresh()
+    --- Local Helper: refresh
+    --- Populates each visible line in the scrollbox with WA data for a player.
+    -- @param self       ScrollBox  The scrollbox instance.
+    -- @param data       table      Array returned by PrepareData().
+    -- @param offset     number     Starting index offset into data.
+    -- @param totalLines number     Number of line frames to update.
+    local function refresh(self, data, offset, totalLines)
+        for i = 1, totalLines do
+            local index = i + offset
+            local entry = data[index]
+            if entry then
+                local line = self:GetLine(i)
+
+                -- Name (class-colored, fallback to white)
+                local color = RAID_CLASS_COLORS[entry.class] or { r = 1, g = 1, b = 1 }
+                line.name:SetText(entry.name)
+                line.name:SetTextColor(color.r, color.g, color.b)
+
+                -- Installed (green if “True”, red if “False”)
+                line.weakauras:SetText(entry.installed)
+                if entry.installed == "True" then
+                    line.weakauras:SetTextColor(0, 1, 0)
+                else
+                    line.weakauras:SetTextColor(1, 0, 0)
+                end
+
+                -- Version
+                line.version:SetText(entry.version)
+
+                -- Loaded (green if “True”, red if “False”)
+                line.loaded:SetText(entry.loaded)
+                if entry.loaded == "True" then
+                    line.loaded:SetTextColor(0, 1, 0)
+                else
+                    line.loaded:SetTextColor(1, 0, 0)
+                end
+
+                -- Updated timestamp
+                line.updated:SetText(entry.ts)
+            end
+        end
     end
 
-    --- Creates and returns a single row line for the scrollbox.
-    -- Each line is a frame with labels for player name and WA-related stats,
-    -- positioned based on its index within the scrollable frame.
-    --
-    -- @param self  Frame  The parent scrollbox frame
-    -- @param index number Line index (used for vertical offset)
-    -- @return Frame A configured line frame with attached label elements:
+    --- Local Helper: createLineFunc
+    --- Creates a single row frame for the scrollbox, containing WA status labels.
+    -- @param self  Frame  The parent scrollbox frame.
+    -- @param index number  Line index (1-based), used for vertical positioning.
+    -- @return Frame A configured line frame with attached labels:
     --   - name       (FontString): Player name
-    --   - weakauras  (FontString): Multiline WA list
+    --   - weakauras  (FontString): Installed status
+    --   - version    (FontString): WA version
+    --   - loaded     (FontString): Loaded status
+    --   - updated    (FontString): Last updated timestamp
     local function createLineFunc(self, index)
         local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint(
-            "TOPLEFT",
-            self,
-            "TOPLEFT",
-            1,
-            -((index - 1) * (C.tabs.lineHeight)) - 1
+                "TOPLEFT",
+                self,
+                "TOPLEFT",
+                1,
+                -((index - 1) * C.tabs.lineHeight) - 1
         )
         line:SetSize(self:GetWidth() - 2, C.tabs.lineHeight)
         DF:ApplyStandardBackdrop(line)
@@ -224,58 +242,73 @@ function BuildWeakAurasTab(parent)
         line.name = DF:CreateLabel(line, "")
         line.name:SetPoint("LEFT", line, "LEFT", 5, 0)
 
-        -- WeakAuras label
+        -- Installed label
         line.weakauras = DF:CreateLabel(line, "")
         line.weakauras:SetPoint("LEFT", line, "LEFT", 185, 0)
-        line.weakauras:SetJustifyV("TOP")  -- align multiline text to top
 
-        -- WeakAuras label
+        -- Version label
         line.version = DF:CreateLabel(line, "")
         line.version:SetPoint("LEFT", line, "LEFT", 300, 0)
-        line.version:SetJustifyV("TOP")  -- align multiline text to top
 
-        -- WeakAuras label
+        -- Loaded label
         line.loaded = DF:CreateLabel(line, "")
         line.loaded:SetPoint("LEFT", line, "LEFT", 400, 0)
-        line.loaded:SetJustifyV("TOP")  -- align multiline text to top
 
-        -- WeakAuras label
+        -- Updated timestamp label
         line.updated = DF:CreateLabel(line, "")
         line.updated:SetPoint("LEFT", line, "LEFT", 500, 0)
-        line.updated:SetJustifyV("TOP")  -- align multiline text to top
 
         return line
     end
 
-    --- ScrollBox Setup
-    local weakauras_scrollbox = DF:CreateScrollBox(
-        parent,
-        "VersionCheckScrollBox",               -- unique scrollbox name
-        refresh,                            -- refresh function
-        {},                                 -- initial empty data
-        C.window_width - 40,                -- scrollbox width
-        C.tabs.totalHeight,                 -- scrollbox height
-        C.tabs.visibleRows,                 -- number of visible rows
-        C.tabs.lineHeight,             -- height of each row (extra for multiline)
-        createLineFunc                      -- line creation function
-    )
-
-    parent.scrollbox               = weakauras_scrollbox
-    weakauras_scrollbox.MasterRefresh = MasterRefresh
-    weakauras_scrollbox.ReajustNumFrames = true
-    weakauras_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, C.tabs.startY - 55)
-    DF:ReskinSlider(weakauras_scrollbox)
-
-    -- Create exactly as many line frames as will fit on screen
-    for i = 1, C.tabs.visibleRows do
-        weakauras_scrollbox:CreateLine(createLineFunc)
+    --- Local Helper: MasterRefresh
+    --- Clears existing scrollbox data and repopulates it with fresh WA data.
+    -- @param self  ScrollBox  The scrollbox instance.
+    local function MasterRefresh(self)
+        local data = PrepareData()
+        self:SetData({})
+        self:SetData(data)
+        self:Refresh()
     end
 
-    -- OnShow handler: refresh data whenever tab is shown
-    weakauras_scrollbox:SetScript("OnShow", function(self)
-        EposUI.weakauras_tab:MasterRefresh()
+    -- ScrollBox Setup
+    local wa_scrollbox = DF:CreateScrollBox(
+            parent,
+            "EposWeakAurasScrollBox",
+            refresh,
+            {},
+            C.window_width - 40,
+            C.tabs.totalHeight,
+            C.tabs.visibleRows,
+            C.tabs.lineHeight,
+            createLineFunc
+    )
+    parent.scrollbox = wa_scrollbox
+    wa_scrollbox.MasterRefresh = MasterRefresh
+    wa_scrollbox.ReajustNumFrames = true
+    DF:ReskinSlider(wa_scrollbox)
+    wa_scrollbox:SetPoint(
+            "TOPLEFT",
+            parent,
+            "TOPLEFT",
+            10,
+            C.tabs.startY - 55
+    )
+
+    -- Pre-create exactly visibleRows line frames for performance
+    for i = 1, C.tabs.visibleRows do
+        wa_scrollbox:CreateLine(createLineFunc)
+    end
+
+    -- Refresh when the tab is shown
+    wa_scrollbox:SetScript("OnShow", function(self)
+        if self.MasterRefresh then
+            self:MasterRefresh()
+        end
     end)
 
-    weakauras_scrollbox.__waDropdown = waMenuDropdown
-    return weakauras_scrollbox
+    -- Store dropdown reference for external access if needed
+    wa_scrollbox.__waDropdown = waMenuDropdown
+
+    return wa_scrollbox
 end

@@ -1,174 +1,196 @@
--- ui/Roster/RosterUI
-local _, Epos = ...
-local DF = _G["DetailsFramework"]
+-- ui/roster/RosterUI.lua
 
+local _, Epos = ...
+
+-- Cached Globals
+local DF                 = _G.DetailsFramework                -- DetailsFramework library
+local CreateFrame        = _G.CreateFrame                     -- Frame creation
+local RAID_CLASS_COLORS  = _G.RAID_CLASS_COLORS               -- Class color lookup
+local date               = _G.date                            -- Lua date function
+local table_insert       = table.insert                       -- Table insert
+local table_sort         = table.sort                         -- Table sort
+
+--- BuildRosterTab()
+-- @param parent Frame  The parent frame (tab content) to which the roster UI is added.
+-- @return Frame  The created scrollbox object, with a `MasterRefresh()` method.
 function BuildRosterTab(parent)
-    --- Shortcut to our constants table
+    -- Shortcut to constants table for dimensions, templates, and colors
     local C = Epos.Constants
 
-    --- Buttons
-
-    -- "Request Data" Button (far right)
+    -- “Request Data” Button (far right)
     local requestDataButton = DF:CreateButton(
-        parent,
-        OnClick_EditWhitelist,             -- click handler
-        C.tabs.buttonWidth,
-        C.tabs.buttonHeight,
-        "Request Data",                     -- button text
-        nil, nil, nil,                      -- unused padding/anchor arguments
-        nil, nil, nil,                      -- unused padding/anchor arguments
-        C.templates.button
+            parent,
+            OnClick_EditWhitelist,
+            C.tabs.buttonWidth,
+            C.tabs.buttonHeight,
+            "Request Data",
+            nil, nil, nil,
+            nil, nil, nil,
+            C.templates.button
     )
-    requestDataButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", C.tabs.rightPadding, C.tabs.startY)
+    requestDataButton:SetPoint(
+            "TOPRIGHT",
+            parent,
+            "TOPRIGHT",
+            C.tabs.rightPadding,
+            C.tabs.startY
+    )
     requestDataButton:SetAlpha(1)
-    requestDataButton.tooltip = "Request data from current selected players"
+    requestDataButton.tooltip = "Request data from selected players"
 
-    -- "Roster Options" Button (far left)
+    -- “Roster Options” Button (far left)
     local editRolesButton = DF:CreateButton(
-        parent,
-        function() EposUI.database_options:Show() end,  -- click handler to show options
-        C.tabs.buttonWidth,
-        C.tabs.buttonHeight,
-        "Roster Options",                    -- button text
-        nil, nil, nil,                       -- unused padding/anchor arguments
-        nil, nil, nil,                       -- unused padding/anchor arguments
-        C.templates.button
+            parent,
+            function()
+                if EposUI and EposUI.database_options then
+                    EposUI.database_options:Show()
+                end
+            end,
+            C.tabs.buttonWidth,
+            C.tabs.buttonHeight,
+            "Roster Options",
+            nil, nil, nil,
+            nil, nil, nil,
+            C.templates.button
     )
-    editRolesButton:SetPoint("TOPLEFT", parent, "TOPLEFT", C.tabs.leftPadding, C.tabs.startY)
+    editRolesButton:SetPoint(
+            "TOPLEFT",
+            parent,
+            "TOPLEFT",
+            C.tabs.leftPadding,
+            C.tabs.startY
+    )
     editRolesButton:SetAlpha(1)
-    editRolesButton.tooltip = "Configure role filters for automatic tracking"
+    editRolesButton.tooltip = "Configure role filters for tracking"
 
-    --- Header Frame for column titles
+    -- Header Frame (Column Titles)
     local header = CreateFrame("Frame", "$parentHeader", parent, "BackdropTemplate")
-    header:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, C.tabs.startY - 30)
-    header:SetSize(C.window_width - 40, C.tabs.lineHeight)
+    header:SetPoint(
+            "TOPLEFT",
+            parent,
+            "TOPLEFT",
+            10,
+            C.tabs.startY - 30
+    )
+    header:SetSize(
+            C.window_width - 40,
+            C.tabs.lineHeight
+    )
     DF:ApplyStandardBackdrop(header)
 
-    -- Header text color (same as "EposRaidTools" title: RGB from C.colors)
-    local headerColorR, headerColorG, headerColorB = C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB
+    -- Header text color
+    local hr, hg, hb = C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB
 
     -- Column: Name
     header.nameLabel = DF:CreateLabel(header, "Name")
     header.nameLabel:SetPoint("LEFT", header, "LEFT", 5, 0)
-    header.nameLabel:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.nameLabel:SetTextColor(hr, hg, hb)
 
     -- Column: Rank
     header.rankLabel = DF:CreateLabel(header, "Rank")
     header.rankLabel:SetPoint("LEFT", header, "LEFT", 185, 0)
-    header.rankLabel:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.rankLabel:SetTextColor(hr, hg, hb)
 
     -- Column: Status
     header.statusLabel = DF:CreateLabel(header, "Status")
     header.statusLabel:SetPoint("LEFT", header, "LEFT", 300, 0)
-    header.statusLabel:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.statusLabel:SetTextColor(hr, hg, hb)
 
     -- Column: Updated
     header.updatedLabel = DF:CreateLabel(header, "Updated")
     header.updatedLabel:SetPoint("LEFT", header, "LEFT", 425, 0)
-    header.updatedLabel:SetTextColor(headerColorR, headerColorG, headerColorB)
+    header.updatedLabel:SetTextColor(hr, hg, hb)
 
-    --- Refresh function to populate each line with data
-    -- @param self       The scrollbox object that holds all line frames
-    -- @param data       Table containing player entries
-    -- @param offset     Starting index offset into the data table
-    -- @param totalLines Number of line frames to update
-    local function refresh(self, data, offset, totalLines)
-        for i = 1, totalLines do
-            local index    = i + offset
-            local nickData = data[index]
+    --- Local Helper: PrepareData
+    --- Gathers, filters, and formats guild roster data for display.
+    -- Filters out players based on tracked roles and blacklist, then sorts by rank.
+    -- @return table  Array of player data tables containing: name, rank, class, updated (string).
+    local function PrepareData()
+        local data = {}
+        local tracked = EposRT.Settings and EposRT.Settings.TrackedRoles or {}
 
-            if nickData then
-                local line = self:GetLine(i)
+        for _, player in ipairs(EposRT.GuildRoster or {}) do
+            local inDatabase = EposRT.PlayerDatabase and EposRT.PlayerDatabase[player.name]
+            local blacklisted = EposRT.Blacklist and EposRT.Blacklist[player.name]
 
-                -- Determine class color (fallback to white if missing)
-                local classColor = RAID_CLASS_COLORS[nickData.class] or { r = 1, g = 1, b = 1 }
-
-                -- Name column (colored by class)
-                line.name:SetText(nickData.name)
-                line.name:SetTextColor(classColor.r, classColor.g, classColor.b)
-
-                -- Rank column (white text)
-                line.rank:SetText(nickData.rank)
-                line.rank:SetTextColor(1, 1, 1)
-
-                -- Status column: default to "not in Database" (red)
-                line.trackingStatus:SetText("not in Database")
-                line.trackingStatus:SetTextColor(1, 0, 0)
-
-                -- If player exists in database, update status to "in Database" (green)
-                if EposRT.PlayerDatabase[nickData.name] then
-                    line.trackingStatus:SetText("in Database")
-                    line.trackingStatus:SetTextColor(0, 1, 0)
+            if tracked[player.rank] and not blacklisted then
+                local timestampText = "-"
+                if inDatabase and inDatabase.timestamp then
+                    timestampText = date("%Y-%m-%d %H:%M:%S", inDatabase.timestamp)
                 end
 
-                -- Updated column (white text)
-                line.updated:SetText(nickData.updated)
-                line.updated:SetTextColor(1, 1, 1)
-            end
-        end
-    end
-
-    --- Prepares and returns filtered, formatted roster data.
-    -- Gathers guild roster entries, filters by tracked roles and blacklist,
-    -- and formats the timestamp if available.
-    --
-    -- @return table Sorted list of player data tables, each containing:
-    --   - name    (string): Player's name
-    --   - rank    (number): Player's guild rank
-    --   - class   (string): Player's class
-    --   - updated (string): Last updated timestamp (YYYY-MM-DD HH:MM:SS or "-")
-    local function PrepareData()
-        local data         = {}
-        local trackedRoles = EposRT.Settings and EposRT.Settings.TrackedRoles or {}
-
-        for _, player in ipairs(EposRT.GuildRoster) do
-            local databasePlayer = EposRT.PlayerDatabase[player.name]
-            if trackedRoles[player.rank] and not EposRT.Blacklist[player.name] then
-                table.insert(data, {
+                table_insert(data, {
                     name    = player.name,
                     rank    = player.rank,
                     class   = player.class,
-                    updated = databasePlayer and date("%Y-%m-%d %H:%M:%S", databasePlayer.timestamp) or "-"
+                    updated = timestampText,
                 })
             end
         end
 
-        -- Sort players by rank ascending
-        table.sort(data, function(a, b)
+        -- Sort by rank ascending
+        table_sort(data, function(a, b)
             return a.rank < b.rank
         end)
 
         return data
     end
 
-    --- MasterRefresh: clears existing data and repopulates the scrollbox
-    -- @param self The scrollbox object
-    local function MasterRefresh(self)
-        local data = PrepareData()
-        self:SetData({})
-        self:SetData(data)
-        self:Refresh()
+    --- Local Helper: Refresh Callback
+    --- Populates each visible line in the scrollbox with player data.
+    -- @param self       ScrollBox  The scrollbox instance
+    -- @param data       table      The array of player data
+    -- @param offset     number     Index offset into `data`
+    -- @param totalLines number     Number of line frames to update
+    local function RefreshLines(self, data, offset, totalLines)
+        for i = 1, totalLines do
+            local index = i + offset
+            local entry = data[index]
+
+            if entry then
+                local line = self:GetLine(i)
+
+                -- Class color (fallback to white)
+                local color = RAID_CLASS_COLORS[entry.class] or { r = 1, g = 1, b = 1 }
+
+                -- Name column (class-colored)
+                line.name:SetText(entry.name)
+                line.name:SetTextColor(color.r, color.g, color.b)
+
+                -- Rank column (white)
+                line.rank:SetText(entry.rank)
+                line.rank:SetTextColor(1, 1, 1)
+
+                -- Status column: default “not in Database” (red)
+                line.trackingStatus:SetText("not in Database")
+                line.trackingStatus:SetTextColor(1, 0, 0)
+
+                -- If in database, update to “in Database” (green)
+                if EposRT.PlayerDatabase and EposRT.PlayerDatabase[entry.name] then
+                    line.trackingStatus:SetText("in Database")
+                    line.trackingStatus:SetTextColor(0, 1, 0)
+                end
+
+                -- Updated column (white)
+                line.updated:SetText(entry.updated)
+                line.updated:SetTextColor(1, 1, 1)
+            end
+        end
     end
 
-    --- Creates and returns a single row line for the scrollbox.
-    -- Each line is a frame with labels for name, rank, status, and updated timestamp,
-    -- positioned based on its index within the scrollable area.
-    --
-    -- @param self  Frame  The parent scrollbox frame
-    -- @param index number Line index (used for vertical offset)
-    -- @return Frame A configured line frame with attached label elements:
-    --   - name           (FontString): Player name
-    --   - rank           (FontString): Player rank
-    --   - trackingStatus (FontString): Whether player is in database
-    --   - updated        (FontString): Last update timestamp
+    --- Local Helper: createLineFunc
+    --- Creates a single line frame for the scrollbox at the given index.
+    -- @param self  Frame  The scrollbox frame
+    -- @param index number Line index (1-based), used for vertical positioning
+    -- @return Frame A new line frame containing four labels: name, rank, trackingStatus, updated
     local function createLineFunc(self, index)
         local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint(
-            "TOPLEFT",
-            self,
-            "TOPLEFT",
-            1,
-            -((index - 1) * (self.LineHeight)) - 1
+                "TOPLEFT",
+                self,
+                "TOPLEFT",
+                1,
+                -((index - 1) * self.LineHeight) - 1
         )
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)
@@ -192,36 +214,57 @@ function BuildRosterTab(parent)
         return line
     end
 
-    --- ScrollBox Setup
-    local roster_scrollbox = DF:CreateScrollBox(
-        parent,
-        "VersionCheckScrollBox",             -- unique scrollbox name
-        refresh,                             -- refresh function
-        {},                                  -- initial empty data
-        C.window_width - 40,                 -- scrollbox width
-        C.tabs.totalHeight,                  -- scrollbox height
-        C.tabs.visibleRows,                  -- number of visible rows
-        C.tabs.lineHeight,                   -- height of each row
-        createLineFunc                       -- line creation function
-    )
-
-    parent.scrollbox                = roster_scrollbox
-    roster_scrollbox.MasterRefresh  = MasterRefresh
-    roster_scrollbox.ReajustNumFrames = true
-    DF:ReskinSlider(roster_scrollbox)
-
-    -- Position scrollbox slightly higher (startY - 55 instead of startY - 60)
-    roster_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, C.tabs.startY - 55)
-
-    -- Create exactly as many line frames as will fit on screen
-    for i = 1, C.tabs.visibleRows do
-        roster_scrollbox:CreateLine(createLineFunc)
+    --- Local Helper: MasterRefresh
+    --- Clears existing scrollbox data and repopulates it with fresh roster data.
+    -- @param self ScrollBox  The scrollbox instance
+    local function MasterRefresh(self)
+        local data = PrepareData()
+        self:SetData({})
+        self:SetData(data)
+        self:Refresh()
     end
 
-    -- OnShow handler: refresh data whenever tab is shown
-    roster_scrollbox:SetScript("OnShow", function(self)
-        EposUI.roster_tab:MasterRefresh()
+    --- ScrollBox Setup
+    local rosterScrollBox = DF:CreateScrollBox(
+            parent,
+            "EposRosterScrollBox",
+            RefreshLines,
+            {},
+            C.window_width - 40,
+            C.tabs.totalHeight,
+            C.tabs.visibleRows,
+            C.tabs.lineHeight,
+            createLineFunc
+    )
+
+    -- Store reference on parent for external access
+    parent.scrollbox = rosterScrollBox
+    rosterScrollBox.MasterRefresh = MasterRefresh
+    rosterScrollBox.ReajustNumFrames = true
+
+    -- Apply skin to the scroll bar
+    DF:ReskinSlider(rosterScrollBox)
+
+    -- Position scrollbox within parent
+    rosterScrollBox:SetPoint(
+            "TOPLEFT",
+            parent,
+            "TOPLEFT",
+            10,
+            C.tabs.startY - 55
+    )
+
+    -- Pre-create exactly VISIBLE_ROWS line frames
+    for i = 1, C.tabs.visibleRows do
+        rosterScrollBox:CreateLine(createLineFunc)
+    end
+
+    -- Refresh when the tab is shown
+    rosterScrollBox:SetScript("OnShow", function(self)
+        if rosterScrollBox.MasterRefresh then
+            rosterScrollBox:MasterRefresh()
+        end
     end)
 
-    return roster_scrollbox
+    return rosterScrollBox
 end
