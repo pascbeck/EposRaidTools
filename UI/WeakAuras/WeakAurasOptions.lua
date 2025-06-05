@@ -27,10 +27,10 @@ function BuildWeakAurasOptions()
 
         for _, id in pairs(EposRT.WeakAurasOptions["fetch"]) do
             -- Attempt to retrieve WA set info; replace with actual WA‐API call if different
-            local info = C_WeakAuras.GetSetInfo and C_WeakAuras.GetSetInfo(id) or nil
-            local name = (info and info.name) or ("Invalid ID")
-            local description = (info and info.description) or ""
-            local iconFileID = (info and info.iconFileID) or nil
+            local info = WeakAuras and WeakAuras.GetData(id) or nil
+            local name = (info and info.id) or id
+            local description = (info and info.desc) or ""
+            local iconFileID = (info and info.icon) or nil
 
             tinsert(data, {
                 id = id,
@@ -73,12 +73,8 @@ function BuildWeakAurasOptions()
                 line.waSetID = entry.id
 
                 -- Icon (if valid)
-                if entry.iconFileID then
-                    line.iconTexture:SetTexture(entry.iconFileID)
-                    line.iconTexture:Show()
-                else
-                    line.iconTexture:Hide()
-                end
+                line.iconTexture:SetTexture("Interface\\AddOns\\EposRaidTools\\Media\\logo_64.tga")
+                line.iconTexture:Show()
 
                 -- Name
                 line.nameLabel:SetText(entry.name)
@@ -141,7 +137,14 @@ function BuildWeakAurasOptions()
                 end
             end
 
-            EposRT.WeakAurasOptions["show"] = EposRT.WeakAurasOptions["fetch"][1] or nil
+
+            if EposRT.WeakAurasOptions["show"] == id then
+                EposRT.WeakAurasOptions["show"] = EposRT.WeakAurasOptions["fetch"][1] or nil
+            end
+
+        if not next(EposRT.WeakAurasOptions.fetch or {}) then
+            EposRT.WeakAurasOptions.show = nil
+        end
 
             if (EposUI.weakauras_tab) then
                 local dd = EposUI.weakauras_tab.__waDropdown
@@ -215,13 +218,8 @@ function BuildWeakAurasOptions()
 
     -- Add button to insert the entered WA ID
     local add_button = DF:CreateButton(wa_options_frame, function()
-        local text = new_entry:GetText():trim()
-        local id = tonumber(text)
+        local id = new_entry:GetText():trim()
 
-        if not id then
-            print("Invalid WA set ID. Please enter a number.")
-            return
-        end
 
         -- Avoid duplicates
         for _, existing in ipairs(EposRT.WeakAurasOptions["fetch"]) do
@@ -230,8 +228,16 @@ function BuildWeakAurasOptions()
             end
         end
 
+
+        print(id)
+        local wa = WeakAuras.GetData(id)
+        if not wa then
+            print("Invalid WeakAura")
+            return
+        end
         tinsert(EposRT.WeakAurasOptions["fetch"], id)
         EposRT.WeakAurasOptions["show"] = id
+        DevTools_Dump(EposRT.WeakAurasOptions["show"])
         new_entry:SetText("")
         wa_scrollbox:MasterRefresh()
 

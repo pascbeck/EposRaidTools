@@ -71,7 +71,7 @@ function Epos:EventHandler(e, wowevent, internal, ...)
       EposRT.CrestsOptions["show"]  = EposRT.CrestsOptions["show"] or 3110
 
 
-      EposRT.WeakAurasOptions["fetch"] =  {
+      EposRT.WeakAurasOptions["fetch"] = EposRT.WeakAurasOptions["fetch"] or  {
         "Epos Database",
         "Interrupt Anchor",
         "Kaze MRT Timers",
@@ -80,7 +80,7 @@ function Epos:EventHandler(e, wowevent, internal, ...)
         "RaidBuff Reminders",
         "WeakAura Anchors (don't rename these)"
       }
-      EposRT.WeakAurasOptions["show"]  = EposRT.WeakAurasOptions["show"] or 3110
+      EposRT.WeakAurasOptions["show"]  = EposRT.WeakAurasOptions["show"] or "Liberation of Undermine"
     end
 
   elseif e == "PLAYER_LOGIN" and wowevent then

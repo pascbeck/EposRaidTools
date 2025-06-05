@@ -127,7 +127,6 @@ function BuildWeakAurasTab(parent)
                     line.weakauras:SetTextColor(1, 0, 0)  -- red
                 end
 
-                DevTools_Dump(dataEntry)
                 line.loaded:SetText(tostring(dataEntry.loaded))
 
                 if dataEntry.loaded == "True" then
@@ -156,32 +155,35 @@ function BuildWeakAurasTab(parent)
             local db = EposRT.PlayerDatabase[player.name]  -- database entry for this player
             if db then
                 local weakaura                = db.weakaura[EposRT.WeakAurasOptions["show"]]
+                print("123")
+                DevTools_Dump(weakaura)
+                print("123")
                 local timestamp           = db.timestamp and
                 date("%Y-%m-%d %H:%M", db.timestamp) or
                 "-"
 
-                if trackedRoles[player.rank] and not EposRT.Blacklist[player.name] then
-                    table.insert(data, {
-                        name = player.name,
-                        class = player.class,
-                        rank = player.rank,
-                        id = weakaura and weakaura.id or "-",
-                        version = weakaura and weakaura.semver or "-",
-                        url = weakaura and weakaura.url or "-",
-                        icon = weakaura and  weakaura.displayIcon or "-",
-                        ts = timestamp,
-                        loaded = weakaura and weakaura.isLoaded and "True" or "False",
-                        installed = weakaura and weakaura.id and "True" or "False"
-                    })
+                if next(EposRT.WeakAurasOptions.fetch) then
+                    if trackedRoles[player.rank] and not EposRT.Blacklist[player.name] then
+                        table.insert(data, {
+                            name = player.name,
+                            class = player.class,
+                            rank = player.rank,
+                            id = weakaura and weakaura.id or "-",
+                            version = weakaura and weakaura.semver or "-",
+                            url = weakaura and weakaura.url or "-",
+                            icon = weakaura and  weakaura.displayIcon or "-",
+                            ts = timestamp,
+                            loaded = weakaura and weakaura.isLoaded and "True" or "False",
+                            installed = weakaura and weakaura.id and "True" or "False"
+                        })
+                    end
                 end
+
             end
         end
 
         -- Sort players by rank ascending, then by name
         table.sort(data, function(a, b)
-            if a.rank == b.rank then
-                return a.name < b.name
-            end
             return a.rank < b.rank
         end)
 
@@ -274,5 +276,6 @@ function BuildWeakAurasTab(parent)
         EposUI.weakauras_tab:MasterRefresh()
     end)
 
+    weakauras_scrollbox.__waDropdown = waMenuDropdown
     return weakauras_scrollbox
 end

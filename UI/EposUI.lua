@@ -1,12 +1,11 @@
 -- ui/EposUI.lua
 local _, Epos = ...
+local C = Epos.Constants
 local DF = _G["DetailsFramework"]
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 local WA = _G["WeakAuras"]
 
--- Alias Constants as C
-local C = Epos.Constants
 
 local ui_panel_options = {
     UseStatusBar = true
@@ -98,16 +97,14 @@ function EposUI:Init()
             type = "execute",
             name = "Clear EposRT Data",
             desc = "This will erase all EposRT saved settings and reload the UI.",
-            confirm = true,
-            confirmText = "Are you sure you want to clear all EposRT data? This cannot be undone.",
             func = function()
-                -- Clear the saved settings
-                -- Also clear runtime state if needed
-                EposRT = {}
-                -- Reload UI to apply changes
-                ReloadUI()
+                for k, v in pairs(DF) do
+                    if type(v) == "function" then
+                        print(k, v)
+                    end
+                end
             end,
-        },
+        }
     }
 
     -- AddOns tab (empty menu)
@@ -169,6 +166,7 @@ function EposUI:Init()
 
     -- WeakAuras UI
     EposUI.weakauras_tab    = BuildWeakAurasTab(weakauras_tab)
+    EposUI.weakauras_options   = BuildWeakAurasOptions()
 
     -- Version number in status bar
     local versionTitle = C_AddOns.GetAddOnMetadata("EposRaidTools", "Title")
