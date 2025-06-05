@@ -46,6 +46,7 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
       EposRT.Blacklist        = EposRT.Blacklist        or {}
       EposRT.CrestsOptions    = EposRT.CrestsOptions    or {}
       EposRT.WeakAurasOptions = EposRT.WeakAurasOptions or {}
+      EposRT.AddOnsOptions    = EposRT.AddOnsOptions    or {}
 
       -- Register “EPOSDATABASE” communication channel via AceComm (if available)
       local AceComm = LibStub("AceComm-3.0", true)
@@ -108,6 +109,13 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
         "WeakAura Anchors (don't rename these)"
       }
       EposRT.WeakAurasOptions.show  = EposRT.WeakAurasOptions.show  or "Liberation of Undermine"
+
+      -- Default AddOns options
+      EposRT.AddOnsOptions.fetch = EposRT.AddOnsOptions.fetch or {
+        "MRT",
+        "EposRaidTools"
+      }
+      EposRT.AddOnsOptions.show  = EposRT.AddOnsOptions.show  or "MRT"
     end
 
     -- PLAYER_LOGIN: Initialize UI and DataBroker after the player logs in

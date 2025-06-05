@@ -222,6 +222,14 @@ function EposUI:Init()
         self.weakauras_options = BuildWeakAurasOptions()
     end
 
+    -- Build AddOns UI
+    if BuildAddOnsTab then
+        self.addons_tab = BuildAddOnsTab(addonsTab)
+    end
+    if BuildAddOnsOptions then
+        self.addons_options = BuildAddOnsOptions()
+    end
+
 
     -- Display Version in Status Bar
     local title       = C_AddOns.GetAddOnMetadata("EposRaidTools", "Title") or "Epos Raid Tools"

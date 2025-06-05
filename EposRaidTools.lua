@@ -7,18 +7,6 @@ local GetNumGuildMembers        = _G.GetNumGuildMembers
 local GetGuildRosterInfo        = _G.GetGuildRosterInfo
 local GetMaxLevelForLatestExpansion = _G.GetMaxLevelForLatestExpansion
 
--- AddOn-wide tables and settings
--- Persistent Runtime Table: holds shared data across sessions (populated elsewhere)
-EposRT = EposRT or {}
-EposRT.GuildRoster = EposRT.GuildRoster or {}
-EposRT.Settings = EposRT.Settings or {
-    Minimap = {
-        -- Default minimap icon settings (override in SavedVariables)
-        hide = false,
-        minimapPos = 180,
-    }
-}
-
 -- LibDataBroker / LibDBIcon Integration
 local LibStub     = _G.LibStub
 local LDB         = LibStub and LibStub:GetLibrary("LibDataBroker-1.1", true)

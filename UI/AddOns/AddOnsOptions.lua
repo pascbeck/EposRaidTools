@@ -1,4 +1,4 @@
--- ui/weakauras/WeakAurasOptionsUI.lua
+-- ui/addons/AddOnsOptions.lua
 
 local _, Epos = ...
 
@@ -6,10 +6,9 @@ local _, Epos = ...
 local DF               = _G.DetailsFramework               -- DetailsFramework library
 local UIParent         = _G.UIParent                       -- Blizzard UI parent frame
 local CreateFrame      = _G.CreateFrame                    -- Frame creation function
-local WeakAuras        = _G.WeakAuras                      -- WeakAuras global
+local C_AddOns         = _G.C_AddOns                       -- AddOns namespace
 local table_insert     = table.insert                      -- Table insert
 local table_sort       = table.sort                        -- Table sort
-local strfind          = _G.strfind                        -- String find
 local print            = print                             -- Print to chat
 local C                = Epos.Constants                    -- Constants table (templates, sizes, colors)
 
@@ -21,35 +20,34 @@ local SCROLL_HEIGHT  = 300                                 -- ScrollBox height
 local ROW_HEIGHT     = 40                                  -- Height of each scroll row
 local VISIBLE_ROWS   = 15                                  -- Number of visible rows in ScrollBox
 
---- BuildWeakAurasOptions()
--- @return Frame  The created WeakAuras options frame (hidden by default).
-function BuildWeakAurasOptions()
+--- BuildAddOnsOptions()
+-- @return Frame  The created AddOns options frame (hidden by default).
+function BuildAddOnsOptions()
     -- Create the Main Panel
-    local wa_options_frame = DF:CreateSimplePanel(
+    local ao_options_frame = DF:CreateSimplePanel(
             UIParent,
             PANEL_WIDTH,
             PANEL_HEIGHT,
-            "WeakAuras Options",
-            "WeakAurasOptionsFrame",
+            "AddOns Options",
+            "AddOnsOptionsFrame",
             { DontRightClickClose = true }
     )
-    wa_options_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    ao_options_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
     --- Local Helper: PrepareData
-    --- Gathers all currently fetched WeakAura set IDs into a sorted table with info.
-    -- Replace WeakAuras.GetData(id) with your actual API if needed.
+    --- Gathers all currently tracked AddOn folder names into a sorted table with info.
     -- @return table  Array of { id, name, description, iconFileID } entries.
     local function PrepareData()
         local data = {}
-        for _, id in ipairs(EposRT.WeakAurasOptions.fetch) do
-            local info = WeakAuras and WeakAuras.GetData(id) or nil
-            local name = (info and info.id) or id
-            local description = (info and info.desc) or ""
-            local iconFileID = (info and info.icon) or nil
+        for _, folderName in ipairs(EposRT.AddOnsOptions.fetch) do
+            -- Check metadata for Title/Notes/IconTexture
+            local title       = C_AddOns.GetAddOnMetadata(folderName, "Title") or folderName
+            local description = C_AddOns.GetAddOnMetadata(folderName, "Notes") or ""
+            local iconFileID  = C_AddOns.GetAddOnMetadata(folderName, "IconTexture") or nil
 
             table_insert(data, {
-                id          = id,
-                name        = name,
+                id          = folderName,
+                name        = title,
                 description = description,
                 iconFileID  = iconFileID,
             })
@@ -59,7 +57,7 @@ function BuildWeakAurasOptions()
     end
 
     --- Local Helper: MasterRefresh
-    --- Clears and repopulates the ScrollBox with updated WeakAura data.
+    --- Clears and repopulates the ScrollBox with updated AddOn data.
     -- @param self  ScrollBox  The ScrollBox instance.
     local function MasterRefresh(self)
         local data = PrepareData()
@@ -68,7 +66,7 @@ function BuildWeakAurasOptions()
     end
 
     --- Local Helper: refresh
-    --- Populates each ScrollBox line with WeakAura set info.
+    --- Populates each ScrollBox line with AddOn info.
     -- @param self       ScrollBox  The ScrollBox instance.
     -- @param data       table      Array returned by PrepareData().
     -- @param offset     number     Starting index offset into data.
@@ -79,17 +77,22 @@ function BuildWeakAurasOptions()
             local entry = data[index]
             if entry then
                 local line = self:GetLine(i)
-                line.waSetID = entry.id
+                line.addonID = entry.id
 
-                -- Icon
-                line.iconTexture:SetTexture("Interface\\AddOns\\EposRaidTools\\Media\\logo_64.tga")
-                line.iconTexture:Show()
+                -- Icon (if provided by metadata; otherwise hide)
+                local iconPath = entry.iconFileID or ""
+                if iconPath ~= "" then
+                    line.iconTexture:SetTexture(iconPath)
+                    line.iconTexture:Show()
+                else
+                    line.iconTexture:Hide()
+                end
 
-                -- Name
+                -- Name (Title)
                 line.nameLabel:SetText(entry.name)
 
-                -- Description (truncate if needed)
-                line.descLabel:SetText(entry.description)
+                -- Description (Notes)
+                -- line.descLabel:SetText(entry.description)
             end
         end
     end
@@ -99,10 +102,10 @@ function BuildWeakAurasOptions()
     -- @param self  Frame  The parent ScrollBox frame.
     -- @param index number  Line index (1-based), used for vertical positioning.
     -- @return Frame A configured line frame with:
-    --   - iconTexture   (Texture): WeakAura icon.
-    --   - nameLabel     (FontString): WeakAura name.
-    --   - descLabel     (FontString): WeakAura description.
-    --   - deleteButton  (Button): Button to remove this WeakAura ID from fetch list.
+    --   - iconTexture   (Texture): AddOn icon (if any).
+    --   - nameLabel     (FontString): AddOn title.
+    --   - descLabel     (FontString): AddOn notes.
+    --   - deleteButton  (Button): Button to remove this AddOn from fetch list.
     local function createLineFunc(self, index)
         local line = CreateFrame("Frame", "$parentLine"..index, self, "BackdropTemplate")
         line:SetPoint(
@@ -135,13 +138,13 @@ function BuildWeakAurasOptions()
         line.deleteButton = DF:CreateButton(
                 line,
                 function()
-                    local id = line.waSetID
+                    local id = line.addonID
                     if not id then
                         return
                     end
 
                     -- Remove id from fetch list
-                    local list = EposRT.WeakAurasOptions.fetch
+                    local list = EposRT.AddOnsOptions.fetch
                     for i = #list, 1, -1 do
                         if list[i] == id then
                             table.remove(list, i)
@@ -150,20 +153,20 @@ function BuildWeakAurasOptions()
                     end
 
                     -- Update “show” to first entry or nil
-                    if EposRT.WeakAurasOptions.show == id then
-                        EposRT.WeakAurasOptions.show = list[1] or nil
+                    if EposRT.AddOnsOptions.show == id then
+                        EposRT.AddOnsOptions.show = list[1] or nil
                     end
-                    if not next(EposRT.WeakAurasOptions.fetch or {}) then
-                        EposRT.WeakAurasOptions.show = nil
+                    if not next(EposRT.AddOnsOptions.fetch or {}) then
+                        EposRT.AddOnsOptions.show = nil
                     end
 
                     -- Refresh the dropdown and tab if they exist
-                    if EposUI and EposUI.weakauras_tab then
-                        local dd = EposUI.weakauras_tab.__waDropdown
+                    if EposUI and EposUI.addons_tab then
+                        local dd = EposUI.addons_tab.__addonDropdown
                         if dd then
                             dd:Refresh()
-                            dd:Select(EposRT.WeakAurasOptions.fetch[1])
-                            EposUI.weakauras_tab:MasterRefresh()
+                            dd:Select(EposRT.AddOnsOptions.fetch[1])
+                            EposUI.addons_tab:MasterRefresh()
                         end
                     end
 
@@ -185,9 +188,9 @@ function BuildWeakAurasOptions()
     end
 
     -- ScrollBox Setup
-    local wa_scrollbox = DF:CreateScrollBox(
-            wa_options_frame,
-            "$parentWeakAurasScrollBox",
+    local ao_scrollbox = DF:CreateScrollBox(
+            ao_options_frame,
+            "$parentAddOnsScrollBox",
             refresh,
             {},
             SCROLL_WIDTH,
@@ -196,32 +199,32 @@ function BuildWeakAurasOptions()
             ROW_HEIGHT,
             createLineFunc
     )
-    wa_options_frame.scrollbox = wa_scrollbox
-    wa_scrollbox.MasterRefresh = MasterRefresh
-    wa_scrollbox.ReajustNumFrames = true
-    DF:ReskinSlider(wa_scrollbox)
-    wa_scrollbox:SetPoint("TOPLEFT", wa_options_frame, "TOPLEFT", 10, -50)
+    ao_options_frame.scrollbox = ao_scrollbox
+    ao_scrollbox.MasterRefresh = MasterRefresh
+    ao_scrollbox.ReajustNumFrames = true
+    DF:ReskinSlider(ao_scrollbox)
+    ao_scrollbox:SetPoint("TOPLEFT", ao_options_frame, "TOPLEFT", 10, -50)
 
     -- Pre-create exactly VISIBLE_ROWS line frames for performance
     for i = 1, VISIBLE_ROWS do
-        wa_scrollbox:CreateLine(createLineFunc)
+        ao_scrollbox:CreateLine(createLineFunc)
     end
 
     -- Refresh when the panel is shown
-    wa_scrollbox:SetScript("OnShow", function(self)
+    ao_scrollbox:SetScript("OnShow", function(self)
         self:MasterRefresh()
     end)
 
-    -- Input Area: Add New WeakAura Set ID
-    local new_label = DF:CreateLabel(wa_options_frame, "New Identifier:", 11)
-    new_label:SetPoint("TOPLEFT", wa_scrollbox, "BOTTOMLEFT", 0, -20)
+    -- Input Area: Add New AddOn Folder Name
+    local new_label = DF:CreateLabel(ao_options_frame, "New AddOn Folder:", 11)
+    new_label:SetPoint("TOPLEFT", ao_scrollbox, "BOTTOMLEFT", 0, -20)
 
-    local new_entry = DF:CreateTextEntry(wa_options_frame, function() end, 120, 20)
+    local new_entry = DF:CreateTextEntry(ao_options_frame, function() end, 120, 20)
     new_entry:SetPoint("LEFT", new_label, "RIGHT", 10, 0)
     new_entry:SetTemplate(C.templates.dropdown)
 
     local add_button = DF:CreateButton(
-            wa_options_frame,
+            ao_options_frame,
             function()
                 local input = new_entry:GetText():trim()
                 if input == "" then
@@ -229,29 +232,30 @@ function BuildWeakAurasOptions()
                 end
 
                 -- Avoid duplicates
-                for _, existing in ipairs(EposRT.WeakAurasOptions.fetch) do
+                for _, existing in ipairs(EposRT.AddOnsOptions.fetch) do
                     if existing == input then
                         return
                     end
                 end
 
-                local waData = WeakAuras and WeakAuras.GetData(input) or nil
-                if not waData then
-                    print("Invalid WeakAura ID: "..input)
+                -- Validate that this AddOn folder actually exists (via metadata Title)
+                local title = C_AddOns.GetAddOnMetadata(input, "Title")
+                if not title then
+                    print("Invalid AddOn folder: "..input)
                     return
                 end
 
-                table_insert(EposRT.WeakAurasOptions.fetch, input)
-                EposRT.WeakAurasOptions.show = input
+                table_insert(EposRT.AddOnsOptions.fetch, input)
+                EposRT.AddOnsOptions.show = input
                 new_entry:SetText("")
-                wa_scrollbox:MasterRefresh()
+                ao_scrollbox:MasterRefresh()
 
-                if EposUI and EposUI.weakauras_tab then
-                    local dd = EposUI.weakauras_tab.__waDropdown
+                if EposUI and EposUI.addons_tab then
+                    local dd = EposUI.addons_tab.__addonDropdown
                     if dd then
                         dd:Refresh()
                         dd:Select(input)
-                        EposUI.weakauras_tab:MasterRefresh()
+                        EposUI.addons_tab:MasterRefresh()
                     end
                 end
             end,
@@ -264,6 +268,6 @@ function BuildWeakAurasOptions()
     add_button:SetPoint("LEFT", new_entry, "RIGHT", 10, 0)
 
     -- Hide Panel by Default
-    wa_options_frame:Hide()
-    return wa_options_frame
+    ao_options_frame:Hide()
+    return ao_options_frame
 end
