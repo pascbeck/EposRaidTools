@@ -179,22 +179,6 @@ function EposUI:Init()
             nil
     )
 
-    -- Setup tab also empty for now
-    DF:BuildMenu(
-            setupTab,
-            {},
-            menuX, menuY,
-            menuHeight,
-            false,
-            C.templates.text,
-            C.templates.dropdown,
-            C.templates.switch,
-            true,
-            C.templates.slider,
-            C.templates.button,
-            nil
-    )
-
     -- Build Database (Roster) UI
     if BuildRosterTab then
         self.roster_tab = BuildRosterTab(rosterTab)
@@ -230,6 +214,9 @@ function EposUI:Init()
         self.addons_options = BuildAddOnsOptions()
     end
 
+    if BuildSetupsManagerUI then
+        self.setup_tab = BuildSetupsManagerUI(setupTab)
+    end
 
     -- Display Version in Status Bar
     local title       = C_AddOns.GetAddOnMetadata("EposRaidTools", "Title") or "Epos Raid Tools"

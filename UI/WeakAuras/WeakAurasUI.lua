@@ -142,7 +142,7 @@ function BuildWeakAurasTab(parent)
         local data = {}
         local trackedRoles = (EposRT.Settings and EposRT.Settings.TrackedRoles) or {}
 
-        for _, player in ipairs(EposRT.GuildRoster or {}) do
+        for _, player in pairs(EposRT.GuildRoster or {}) do
             local dbEntry = (EposRT.PlayerDatabase or {})[player.name]
             if dbEntry and next(EposRT.WeakAurasOptions.fetch) then
                 local waData = (dbEntry.weakaura or {})[EposRT.WeakAurasOptions.show]

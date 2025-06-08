@@ -35,5 +35,11 @@ UI/WeakAuras/WeakAurasUI.lua
 # AddOns
 UI/AddOns/AddOnsOptions.lua
 UI/AddOns/AddOnsUI.lua
+
+# SetupsDev
+UI/SetupsManager/dkjson.lua
+UI/SetupsManager/SetupsManagerHelper.lua
+UI/SetupsManager/SetupsManagerUI.lua
+
 # Main UI
 UI/EposUI.lua

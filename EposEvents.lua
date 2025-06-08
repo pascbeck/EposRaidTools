@@ -10,6 +10,7 @@ local LibStub       = _G.LibStub
 -- Create a hidden frame to listen for events
 local eventFrame = CreateFrame("Frame")
 
+
 -- Register all relevant WoW events
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
@@ -25,6 +26,8 @@ eventFrame:SetScript("OnEvent", function(self, eventName, ...)
   -- “true” indicates this is a Blizzard‐fired event; “false” will be passed for internal events
   Epos:HandleEvent(eventName, true, false, ...)
 end)
+
+Epos.EventFrame = eventFrame
 
 --- Event Handler
 --- Handles both Blizzard‐fired events and internal custom events.
@@ -47,6 +50,8 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
       EposRT.CrestsOptions    = EposRT.CrestsOptions    or {}
       EposRT.WeakAurasOptions = EposRT.WeakAurasOptions or {}
       EposRT.AddOnsOptions    = EposRT.AddOnsOptions    or {}
+      EposRT.SetupsManager    = EposRT.SetupsManager    or {}
+
 
       -- Register “EPOSDATABASE” communication channel via AceComm (if available)
       local AceComm = LibStub("AceComm-3.0", true)
@@ -116,6 +121,8 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
         "EposRaidTools"
       }
       EposRT.AddOnsOptions.show  = EposRT.AddOnsOptions.show  or "MRT"
+
+      EposRT.SetupsManager.show = EposRT.SetupsManager.show or nil
     end
 
     -- PLAYER_LOGIN: Initialize UI and DataBroker after the player logs in
@@ -139,7 +146,15 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
         EposUI.roster_tab:MasterRefresh()
       end
     end
-
+    elseif eventName == "GROUP_ROSTER_UPDATE" and isWoWEvent then
+    print(eventName)
+    if self.timer then
+      self.timer:Cancel()
+    end
+    self.timer = C_Timer.NewTimer(0.5,function()
+      self.timer = nil
+      Epos:ProcessRoster()
+    end)
     -- Other events (e.g., ENCOUNTER_START, READY_CHECK, GROUP_FORMED, etc.)
   end
 end

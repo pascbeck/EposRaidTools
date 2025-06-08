@@ -149,7 +149,7 @@ function BuildCrestsTab(parent)
         local data = {}
         local trackedRoles = EposRT.Settings and EposRT.Settings.TrackedRoles or {}
 
-        for _, player in ipairs(EposRT.GuildRoster or {}) do
+        for _, player in pairs(EposRT.GuildRoster or {}) do
             local dbEntry = EposRT.PlayerDatabase and EposRT.PlayerDatabase[player.name]
             if dbEntry and next(EposRT.CrestsOptions.fetch) then
                 local currency = dbEntry.currency and dbEntry.currency[EposRT.CrestsOptions.show]

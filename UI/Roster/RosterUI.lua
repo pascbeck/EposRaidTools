@@ -109,7 +109,7 @@ function BuildRosterTab(parent)
         local data = {}
         local tracked = EposRT.Settings and EposRT.Settings.TrackedRoles or {}
 
-        for _, player in ipairs(EposRT.GuildRoster or {}) do
+        for _, player in pairs(EposRT.GuildRoster or {}) do
             local inDatabase = EposRT.PlayerDatabase and EposRT.PlayerDatabase[player.name]
             local blacklisted = EposRT.Blacklist and EposRT.Blacklist[player.name]
 

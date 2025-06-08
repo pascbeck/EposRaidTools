@@ -146,7 +146,7 @@ function BuildAddOnsTab(parent)
         local data = {}
         local trackedRoles = (EposRT.Settings and EposRT.Settings.TrackedRoles) or {}
 
-        for _, player in ipairs(EposRT.GuildRoster or {}) do
+        for _, player in pairs(EposRT.GuildRoster or {}) do
             local dbEntry = (EposRT.PlayerDatabase or {})[player.name]
             if dbEntry and next(EposRT.AddOnsOptions.fetch) then
                 local addonName = EposRT.AddOnsOptions.show

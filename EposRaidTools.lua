@@ -76,18 +76,37 @@ function Epos:FetchGuild()
         return
     end
 
+    local allowedRanks = {
+        ["Guildlead"] = true,
+        ["Officer"] = true,
+        ["Officer Alt"] = true,
+        ["Raider"] = true,
+        ["Raid Alt"] = true,
+        ["Trial"] = true,
+    }
+
     -- Iterate through all guild members
     for index = 1, totalMembers do
         local fullName, rankName, _, level, _, _, _, _, _, _, classFile = GetGuildRosterInfo(index)
-        if fullName and level == maxLevel then
-            -- Only include characters at max level
-            EposRT.GuildRoster[#EposRT.GuildRoster + 1] = {
+        if fullName and level == maxLevel and allowedRanks[rankName] then
+            -- Only include characters at max level and with allowed ranks
+            EposRT.GuildRoster[fullName] = {
                 name  = fullName,
                 rank  = rankName,
                 level = level,
                 class = classFile,
             }
         end
+    end
+end
+
+function Epos:Msg(msg)
+    print("|cFF00FFFFEpos Raid Tools|r:" ..msg)
+end
+
+function Epos:DBGMsg(msg)
+    if EposRT.Settings.debug then
+        print("|cFF00FFFFEpos Raid Tools Debug|r:" ..msg)
     end
 end
 
