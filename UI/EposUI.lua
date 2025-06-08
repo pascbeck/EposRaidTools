@@ -53,8 +53,8 @@ function EposUI:Init()
         { name = "Crests",    text = "Crests"    },
         { name = "WeakAuras", text = "WeakAuras" },
         { name = "AddOns",    text = "AddOns"    },
-        { name = "Settings",  text = "Settings"  },
         { name = "Setup",     text = "Setup"     },
+        { name = "Settings",  text = "Settings"  },
     }
     local CONTAINER_OPTIONS = {
         width               = C.window_width,
