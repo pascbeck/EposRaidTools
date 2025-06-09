@@ -1,6 +1,6 @@
 # Epos Raid Tools
 
-**Epos Raid Tools** is a World of Warcraft addon designed to help raid leaders and officers track guild members’ custom currencies (e.g., “crests”) and roster status. It automatically scans your guild roster, fetches per-player currency data via AceComm, and presents everything in a clean, scrollable UI—complete with role-based filters, blacklists, and on-demand data requests.
+**Epos Raid Tools** is a World of Warcraft addon that gives raid leaders and officers a single dashboard for rosters, custom-currency tracking, WeakAuras, AddOn compliance, and per-boss group setups. It auto-scans your guild roster, exchanges data over AceComm, and shows everything in a clean, scrollable UI—complete with role filters, blacklists, and one-click “Request Data” or “Apply Roster” buttons.
 
 ---
 
