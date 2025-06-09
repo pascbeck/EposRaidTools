@@ -11,6 +11,9 @@
 3. [Usage](#usage)
    - [Guild Roster](#guild-roster)
    - [Crests Tab](#crests-tab)
+   - [WeakAuras Tab](#weakauras-tab)
+   - [AddOns Tab](#addons-tab)
+   - [Setup Tab](#setup-tav)
    - [Requesting & Receiving Data](#requesting--receiving-data)
 4. [Configuration & Saved Variables](#configuration--saved-variables)
 5. [File Structure](#file-structure)
@@ -24,9 +27,20 @@
   - On login or whenever the guild roster updates, the addon builds a list of max‐level guild members (via `fetchGuild`).
   - Stores each member’s name, rank, level, and class in `EposRT.GuildRoster`.
 
-- **Live Currency Data Fetching**
+- **Live Crests Data Fetching**
   - Uses AceComm-3.0 to listen for `“EPOSDATABASE”` messages.
-  - When a trusted sender pushes a compressed/serialized payload, the addon decodes it and updates `EposRT.PlayerDatabase` with per-player currency info (quantity, total earned, cap, timestamp, etc.).
+  - When a trusted sender pushes a compressed/serialized payload, the addon decodes it and updates `EposRT.Crests`.
+   
+- **Live AddOns Data Fetching**
+  - Uses AceComm-3.0 to listen for `“EPOSDATABASE”` messages.
+  - When a trusted sender pushes a compressed/serialized payload, the addon decodes it and updates `EposRT.Addons`.
+ 
+- **Live WeakAuras Data Fetching**
+  - Uses AceComm-3.0 to listen for `“EPOSDATABASE”` messages.
+  - When a trusted sender pushes a compressed/serialized payload, the addon decodes it and updates `EposRT.WeakAuras`.
+ 
+- **Setup Management**
+   -  Export setup string via google sheets and import it in EposRT to manage setups with a single click.
 
 - **Role-Based Filters & Blacklists**
   - Only tracks guild members whose rank is enabled in Roles Management and who are not blacklisted.
@@ -35,9 +49,6 @@
 - **Clean, Scrollable UI**
   - Two main tabs: **Roster** (status tracking) and **Crests** (currency tracking).
   - On-demand “Request Data” buttons to fetch the latest information from peers running the addon.
-
-- **Custom Currency Tracking**
-  - Default currency ID: `3114` (crests), but you can add/remove any other currency IDs in the Crests Options dialog.
 
 ---
 
@@ -92,6 +103,67 @@
 
 4. **Request Data**:
    - Click **Request Data** (top-right) to refresh every player’s currency info via AceComm.
+  
+     ---
+
+### AddOns Tab
+
+1. Switch to the **AddOns** tab to see whether each tracked AddOn folder is present on every player.
+2. Columns in the **AddOns** tab:
+   - **Name** – player name and realm  
+   - **Installed** – green “True” if the folder exists, red “False” if missing  
+   - **Version** – string taken from the AddOn’s `## Version` field (or “-”)  
+   - **Loaded** – green “True” if the AddOn is loaded on the sender’s client  
+   - **Updated** – timestamp of last data received via AceComm  
+
+3. **AddOns Options**  
+   - Click **AddOns Options** (top-left) to build a fetch list of AddOn folders (e.g. `WeakAuras`, `Details`).  
+   - The dropdown at the top of the tab lets you pick which folder’s data to display.
+
+4. **Request Data**  
+   - Click **Request Data** (top-right) to broadcast a query; every guildmate running Epos Raid Tools will reply with their current AddOn payload for the selected folder.
+
+---
+
+### WeakAuras Tab
+
+1. Open the **WeakAuras** tab to check if a specific WA set is installed on each player.
+2. Columns in the **WeakAuras** tab:
+   - **Name** – player name and realm  
+   - **Installed** – green “True” or red “False”  
+   - **Version** – SemVer string from the WA table (or “-”)  
+   - **Loaded** – green if the aura is loaded, red if disabled/not loaded  
+   - **Updated** – timestamp of last data received  
+
+3. **WeakAuras Options**  
+   - Click **WeakAuras Options** (top-left) to manage the list of WA set IDs to track.  
+   - Use the dropdown to choose which set is currently displayed.
+
+4. **Request Data**  
+   - Click **Request Data** (top-right) to poll all online guildmates for the selected WA set.
+
+---
+
+### Setups Tab
+
+1. Select the **Setups** tab to view or edit *per-boss* raid rosters (Groups 1-8).  
+   A roster has five columns: **Tanks**, **Healers**, **Melee**, **Ranged**, and **Benched** (Groups 5-8).
+
+2. Buttons & controls:
+   - **Setup Options** (top-left) – import/export JSON, rename bosses, reorder the boss list.
+   - **Boss dropdown** – choose which boss roster is currently shown.
+   - **Apply Roster** – pushes the visible 40-slot list to the live raid via  
+     `Epos:ApplyGroups(list)` → `ProcessRoster()`, which automatically:
+       1. Moves players to their target groups.  
+       2. Swaps members to resolve full groups.  
+       3. Performs three-way bridge swaps to place everyone in the exact 1-5 slot.  
+       4. Skips if anyone in the raid is in combat or if the raid leader is locked to a group.
+
+3. Colour coding:
+   - Every name is class-coloured (data pulled from `EposRT.GuildRoster`).  
+   - Empty slots render as blank cells.
+
+4. Tip: if you update the JSON file from your Google Sheet, simply hit **Setup Options → Import** and click **Apply Roster** again to refresh the raid groups.
 
 ---
 
