@@ -132,12 +132,8 @@ function EposUI:Init()
             name = "Clear EposRT Data",
             desc = "Erase all saved settings and reload the UI.",
             func = function()
-                -- Example placeholder: print all DF functions
-                for key, val in pairs(DF) do
-                    if type(val) == "function" then
-                        print(key, val)
-                    end
-                end
+                wipe(EposRT)
+                ReloadUI()
             end,
         },
     }
@@ -214,8 +210,12 @@ function EposUI:Init()
         self.addons_options = BuildAddOnsOptions()
     end
 
+    -- Setup UI
     if BuildSetupsManagerUI then
         self.setup_tab = BuildSetupsManagerUI(setupTab)
+    end
+    if BuildSetupsManagerOptions then
+        self.setup_manager_options = BuildSetupsManagerOptions()
     end
 
     -- Display Version in Status Bar

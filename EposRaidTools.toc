@@ -38,6 +38,7 @@ UI/AddOns/AddOnsUI.lua
 
 # SetupsDev
 UI/SetupsManager/dkjson.lua
+UI/SetupsManager/SetupManagerOptions.lua
 UI/SetupsManager/SetupsManagerHelper.lua
 UI/SetupsManager/SetupsManagerUI.lua
 

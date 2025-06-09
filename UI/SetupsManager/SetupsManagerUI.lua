@@ -15,63 +15,28 @@ local C                  = Epos.Constants                     -- Constants
 -- @param parent Frame  The parent frame (tab content) to which the setups manager UI is added.
 -- @return Frame  The created scrollbox object, with a `MasterRefresh()` method.
 function BuildSetupsManagerUI(parent)
-    local importRosterData = DF:CreateButton(
+    local setupOptions = DF:CreateButton(
             parent,
             function()
-                local popup = DF:CreateSimplePanel(EposUI, 300, 150, "Import SetupsDev", "EposImportSetupsPopup",
-                        { DontRightClickClose = true })
-                popup:SetPoint("CENTER")
-                popup:SetFrameLevel(100)
-
-                popup.editBox = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "SendWATextEdit", true, false, true)
-                popup.editBox:SetPoint("TOPLEFT", 10, -30)
-                popup.editBox:SetPoint("BOTTOMRIGHT", -30, 40)
-                DF:ApplyStandardBackdrop(popup.editBox)
-                DF:ReskinSlider(popup.editBox.scroll)
-                popup.editBox:SetFocus()
-
-                popup.confirmBtn = DF:CreateButton(popup, nil, 280, 20, "Import", nil,nil,nil,nil,nil,nil, C.templates.button)
-                popup.confirmBtn:SetPoint("BOTTOM", 0, 10)
-
-                popup.confirmBtn:SetScript("OnClick", function()
-                    local cleaned = popup.editBox:GetText()
-                    popup.editBox:SetText(cleaned)
-                    local data, err = json.decode(cleaned)
-                    if not data then
-                        print("JSON decode error:", err)
-                    else
-                        -- keep keys in the order they appear in the pasted JSON
-                        local orderedBosses = {}
-                        for boss in cleaned:gmatch('"([^"]+)"%s*:%s*{') do
-                            table_insert(orderedBosses, boss)
-                        end
-
-                        EposRT.SetupsManager.setups = data
-                        EposRT.SetupsManager.orderedBosses = orderedBosses   -- <- store the right table
-
-                        popup:Hide()
-                        EposUI.setup_tab:MasterRefresh()
-                    end
-
-                end)
+                if EposUI and EposUI.setup_manager_options then
+                    EposUI.setup_manager_options:Show()
+                end
             end,
             C.tabs.buttonWidth,
             C.tabs.buttonHeight,
-            "Import Setup",
+            "Setup Options",
             nil, nil, nil,
             nil, nil, nil,
             C.templates.button
     )
 
-    importRosterData:SetPoint(
-            "TOPRIGHT",
+    setupOptions:SetPoint(
+            "TOPLEFT",
             parent,
-            "TOPRIGHT",
-            C.tabs.rightPadding,
+            "TOPLEFT",
+            C.tabs.leftPadding,
             C.tabs.startY
     )
-    importRosterData:SetAlpha(1)
-    importRosterData.tooltip = "Import Setups from google sheet"
 
     local function GetBossDropdownOptions()
         local opts = {}
@@ -80,7 +45,8 @@ function BuildSetupsManagerUI(parent)
                 label   = boss,
                 value   = boss,
                 onclick = function(_, _, val)
-                    EposRT.SetupsManager.show = val        -- remember selection
+                    EposRT.SetupsManager.show = val
+                    -- remember selection
                     if parent.scrollbox then               -- refresh list
                         parent.scrollbox:MasterRefresh()
                     end
@@ -90,14 +56,15 @@ function BuildSetupsManagerUI(parent)
         return opts
     end
 
-    local bossDropdown = DF:CreateDropDown(
+    local bossDropdown
+    bossDropdown = DF:CreateDropDown(
             parent,
             GetBossDropdownOptions,
             EposRT.SetupsManager.show,     -- initial value or nil
             220, 30)
 
     bossDropdown:SetTemplate("OPTIONS_DROPDOWN_TEMPLATE")
-    bossDropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", C.tabs.leftPadding, C.tabs.startY + 5)
+    bossDropdown:SetPoint("LEFT", setupOptions, "RIGHT", 15, 0)
     bossDropdown.tooltip = "Choose which boss roster to display"
 
     local applyRosterBtn = DF:CreateButton(
@@ -158,26 +125,13 @@ function BuildSetupsManagerUI(parent)
                     --"Péek-Eredar",
                 })
             end,
-            C.tabs.buttonWidth, C.tabs.buttonHeight + 8,
+            C.tabs.buttonWidth, C.tabs.buttonHeight,
             "Apply Roster",
             nil,nil,nil,nil,nil,nil,
             C.templates.button)
 
     applyRosterBtn:SetPoint("LEFT", bossDropdown, "RIGHT", 15, 0)
     applyRosterBtn.tooltip = "Apply the currently selected roster"
-
-    local clearRoster = DF:CreateButton(
-            parent,
-            function()
-                Epos:Msg("Select a boss first.")
-            end,
-            C.tabs.buttonWidth, C.tabs.buttonHeight + 8,
-            "Clear Setups Table",
-            nil,nil,nil,nil,nil,nil,
-            C.templates.button)
-
-    clearRoster:SetPoint("LEFT", applyRosterBtn, "RIGHT", 15, 0)
-    clearRoster.tooltip = "Clear setups"
 
     -- Header Frame (Column Titles)
     local header = CreateFrame("Frame", "$parentHeader", parent, "BackdropTemplate")
@@ -197,36 +151,79 @@ function BuildSetupsManagerUI(parent)
     -- Header text color
     local hr, hg, hb = C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB
 
-    -- Column: Name
-    header.label = DF:CreateLabel(header, "Roster")
-    header.label:SetPoint("LEFT", header, "LEFT", 5, 0)
-    header.label:SetTextColor(hr, hg, hb)
+    header.tank    = DF:CreateLabel(header, "Tanks")
+    header.tank:SetPoint("LEFT", header, "LEFT", 10, 0)
+    header.tank:SetWidth(100)
+    header.tank:SetTextColor(hr, hg, hb)
+
+    header.healer  = DF:CreateLabel(header, "Healers")
+    header.healer:SetPoint("LEFT", header.tank.widget, "RIGHT", 0, 0)
+    header.healer:SetWidth(100)
+    header.healer:SetTextColor(hr, hg, hb)
+
+
+    header.melee   = DF:CreateLabel(header, "Melee")
+    header.melee:SetPoint("LEFT", header.healer.widget, "RIGHT", 0, 0)
+    header.melee:SetWidth(100)
+    header.melee:SetTextColor(hr, hg, hb)
+
+    header.ranged  = DF:CreateLabel(header, "Ranged")
+    header.ranged:SetPoint("LEFT", header.melee.widget, "RIGHT", 0, 0)
+    header.ranged:SetWidth(100)
+    header.ranged:SetTextColor(hr, hg, hb)
+
+    header.benched  = DF:CreateLabel(header, "Benched")
+    header.benched:SetPoint("LEFT", header.ranged.widget, "RIGHT", 0, 0)
+    header.benched:SetWidth(100)
+    header.benched:SetTextColor(hr, hg, hb)
+
+
+    local function stripRealm(name)
+        return name and name:match("^[^-]+") or ""
+    end
+
+    local function getClassColor(name)
+        local class = EposRT.GuildRoster and EposRT.GuildRoster[name] and EposRT.GuildRoster[name].class
+        return RAID_CLASS_COLORS[class or ""] or { r = 1, g = 1, b = 1 }
+    end
 
     --- Local Helper: PrepareData
     --- Gathers, filters, and formats guild roster data for display.
     -- Filters out players based on tracked roles and blacklist, then sorts by rank.
     -- @return table  Array of player data tables containing: name, rank, class, updated (string).
     local function PrepareData()
-        local out   = {}
-        local boss  = EposRT.SetupsManager.show
-        local set   = (EposRT.SetupsManager.setups or {})[boss] or {}
+        local data = {}
+        local boss = EposRT.SetupsManager.show
+        local set = (EposRT.SetupsManager.setups or {})[boss] or {}
 
-        -- fixed order
-        local keys   = { "tanks", "healers", "melee", "ranged" }
-        local titles = { tanks="Tanks", healers="Healers", melee="Melee", ranged="Ranged" }
+        local roles = { "tanks", "healers", "melee", "ranged", "benched" }
+        local roleData = {}
 
-        for _, key in ipairs(keys) do
-            local players = set[key]
-            if players and #players > 0 then
-                table_insert(out, { kind="role", text=titles[key], class="" })
-                for _, name in ipairs(players) do
-                    table_insert(out, { kind="player", text="  "..name, class = EposRT.GuildRoster[name].class })
-                end
-                table_insert(out, { kind="spacer", text="", class="" })
-            end
+        -- Build lists for each role
+        for _, role in ipairs(roles) do
+            roleData[role] = set[role] or {}
         end
-        return out
+
+        -- Determine max number of rows needed
+        local maxLen = 0
+        for _, list in pairs(roleData) do
+            maxLen = math.max(maxLen, #list)
+        end
+
+        -- Compose rows
+        for i = 1, maxLen do
+            table.insert(data, {
+                tanks   = roleData.tanks[i],
+                healers = roleData.healers[i],
+                melee   = roleData.melee[i],
+                ranged  = roleData.ranged[i],
+                benched = roleData.benched[i]
+            })
+        end
+
+        return data
     end
+
 
     --- Local Helper: Refresh Callback
     --- Populates each visible line in the scrollbox with player data.
@@ -239,23 +236,32 @@ function BuildSetupsManagerUI(parent)
             local entry = data[i + offset]
             local line = self:GetLine(i)
 
-            if entry then
-                line.label:SetText(entry.text)
-
-                -- Default to white unless a class color or role header is provided
-                local color = { r = 1, g = 1, b = 1 }
-
-                if entry.kind == "player" and entry.class then
-                    local classColor = RAID_CLASS_COLORS[entry.class]
-                    if classColor then
-                        color = classColor
-                    end
-                elseif entry.kind == "role" then
-                    color = { r = 1, g = 0, b = 1 } -- white for role headers
+            local function setRole(label, name)
+                if name and name ~= "" then
+                    local displayName = stripRealm(name)
+                    local color = getClassColor(name)
+                    label:SetText(displayName)
+                    label:SetTextColor(color.r, color.g, color.b)
+                else
+                    label:SetText("")
+                    label:SetTextColor(1, 1, 1)
                 end
+            end
 
-                line.label:SetTextColor(color.r, color.g, color.b)
-                line:Show()
+            if line then
+                if entry then
+                    setRole(line.tank, entry.tanks)
+                    setRole(line.healer, entry.healers)
+                    setRole(line.melee, entry.melee)
+                    setRole(line.ranged, entry.ranged)
+                    setRole(line.benched, entry.benched)
+                else
+                    setRole(line.tank, nil)
+                    setRole(line.healer, nil)
+                    setRole(line.melee, nil)
+                    setRole(line.ranged, nil)
+                    setRole(line.benched, nil)
+                end
             end
         end
     end
@@ -272,10 +278,29 @@ function BuildSetupsManagerUI(parent)
         line:SetSize(self:GetWidth()-2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)
 
-        line.label = DF:CreateLabel(line, "")
-        line.label:SetPoint("LEFT", line, "LEFT", 5, 0)
+        line.tank    = DF:CreateLabel(line, "")
+        line.tank:SetPoint("LEFT", line, "LEFT", 10, 0)
+        line.tank:SetWidth(100)
+
+        line.healer  = DF:CreateLabel(line, "")
+        line.healer:SetPoint("LEFT", line.tank.widget, "RIGHT", 0, 0)
+        line.healer:SetWidth(100)
+
+        line.melee   = DF:CreateLabel(line, "")
+        line.melee:SetPoint("LEFT", line.healer.widget, "RIGHT", 0, 0)
+        line.melee:SetWidth(100)
+
+        line.ranged  = DF:CreateLabel(line, "")
+        line.ranged:SetPoint("LEFT", line.melee.widget, "RIGHT", 0, 0)
+        line.ranged:SetWidth(100)
+
+        line.benched  = DF:CreateLabel(line, "")
+        line.benched:SetPoint("LEFT", line.ranged.widget, "RIGHT", 0, 0)
+        line.benched:SetWidth(100)
+
         return line
     end
+
 
     --- Local Helper: MasterRefresh
     --- Clears existing scrollbox data and repopulates it with fresh roster data.
@@ -290,7 +315,7 @@ function BuildSetupsManagerUI(parent)
     --- ScrollBox Setup
     local setupsScrollBox = DF:CreateScrollBox(
             parent,
-            "EposSetupsScrollBox",
+            "EposSetupScrollBox",
             RefreshLines,
             {},
             C.window_width - 40,
@@ -320,6 +345,15 @@ function BuildSetupsManagerUI(parent)
     for i = 1, C.tabs.visibleRows do
         setupsScrollBox:CreateLine(createLineFunc)
     end
+
+    -- Refresh when the tab is shown
+    setupsScrollBox:SetScript("OnShow", function(self)
+        if self.MasterRefresh then
+            self:MasterRefresh()
+        end
+    end)
+    -- Store dropdown reference for external access if needed
+    setupsScrollBox.__bossDropdown = bossDropdown
 
     return setupsScrollBox
 end
