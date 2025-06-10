@@ -24,8 +24,8 @@ function BuildSetupsInterfaceOptions()
             UIParent,
             PANEL_WIDTH,
             PANEL_HEIGHT,
-            "AddOns Options",
-            "AddOnsOptionsFrame",
+            "Setups Options",
+            "SetupsOptionsFrame",
             { DontRightClickClose = true }
     )
     setup_options_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -203,7 +203,7 @@ function BuildSetupsInterfaceOptions()
 end
 
 function Epos:ImportSetups(parent)
-    local popup = DF:CreateSimplePanel(EposUI, 300, 150, "Import SetupsDev", "EposImportSetupsPopup",
+    local popup = DF:CreateSimplePanel(EposUI, 300, 150, "Import JSON", "EposImportSetupsPopup",
             { DontRightClickClose = true })
     popup:SetPoint("CENTER")
     popup:SetFrameLevel(100)
