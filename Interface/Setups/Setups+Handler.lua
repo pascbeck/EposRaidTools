@@ -1,13 +1,20 @@
--- EposRaidTools.lua
+-- interface/setups/Setups+Handler.lua
 
 local _, Epos = ...
 
-function Epos:ApplyGroups(list)
+function Epos:ResetSetupSavedVariables ()
+    EposRT.Setups.AssignmentHandler.needGroup = {}
+    EposRT.Setups.AssignmentHandler.needPosInGroup = {}
+    EposRT.Setups.AssignmentHandler.lockedUnit = {}
+    EposRT.Setups.AssignmentHandler.groupsReady = false
+    EposRT.Setups.AssignmentHandler.groupWithRL = nil
+end
+
+function Epos:ApplyGroups (list)
+    Epos:ResetSetupSavedVariables()
     Epos.EventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-    if not IsInRaid() then
-        Epos:Msg("Cannot be used outside raid environment")
-        return
-    end
+
+    if not IsInRaid() then return end
 
     local inCombatUnits
     for i=1,40 do
@@ -52,19 +59,17 @@ function Epos:ApplyGroups(list)
         end
     end
 
-    local s = EposRT.SetupsManager
-
+    local s = EposRT.Setups.AssignmentHandler
     s.needGroup = needGroup
     s.needPosInGroup = needPosInGroup
     s.lockedUnit = lockedUnit
     s.groupsReady = false
     s.groupWithRL = isRLfound and 0 or RLGroup
-
     Epos:ProcessRoster()
 end
 
-function Epos:ProcessRoster()
-    local s = EposRT.SetupsManager
+function Epos:ProcessRoster ()
+    local s = EposRT.Setups.AssignmentHandler
 
     local UnitsInCombat
     for i=1,40 do

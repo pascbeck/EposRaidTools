@@ -1,8 +1,8 @@
 ## Interface: 110150
-## Title: |cFF00FFFFEpos Raid Tools|r
-## Version:  0.1.3
+## Title: Epos Raid Tools
+## Version:  1.0.0
 ## IconTexture: Interface\AddOns\EposRaidTools\Media\EposLogo.blp
-## Author:   Bluu
+## Author: Bluu
 ## DefaultState: Enable
 ## Dependencies: WeakAuras
 ## SavedVariables: EposRT
@@ -16,31 +16,29 @@ constants.lua
 
 # Main Files
 EposRaidTools.lua
-EposEvents.lua
+EposEventHandler.lua
 
-# UI
-# Roster
-UI/Roster/TrackingOptions.lua
-UI/Roster/Blacklist.lua
-UI/Roster/RosterUI.lua
+# Database
+Interface\Database\Database+Options.lua
+Interface\Database\Database.lua
 
 # Crests
-UI/Crests/CrestsOptions.lua
-UI/Crests/CrestsUI.lua
+Interface\Crests\Crests+Options.lua
+Interface\Crests\Crests.lua
 
 # WeakAuras
-UI/WeakAuras/WeakAurasOptions.lua
-UI/WeakAuras/WeakAurasUI.lua
+Interface\WeakAuras\WeakAuras+Options.lua
+Interface\WeakAuras\WeakAuras.lua
 
 # AddOns
-UI/AddOns/AddOnsOptions.lua
-UI/AddOns/AddOnsUI.lua
+Interface\AddOns\AddOns+Options.lua
+Interface\AddOns\AddOns.lua
 
-# SetupsDev
-UI/SetupsManager/dkjson.lua
-UI/SetupsManager/SetupManagerOptions.lua
-UI/SetupsManager/SetupsManagerHelper.lua
-UI/SetupsManager/SetupsManagerUI.lua
+# Setups
+Interface\Setups\dkjson.lua
+Interface\Setups\Setups+Options.lua
+Interface\Setups\Setups+Handler.lua
+Interface\Setups\Setups.lua
 
-# Main UI
-UI/EposUI.lua
+# Core
+Interface\EposUI.lua

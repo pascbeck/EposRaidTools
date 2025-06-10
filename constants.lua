@@ -10,7 +10,7 @@ local WINDOW_WIDTH  = 800
 local WINDOW_HEIGHT = 600
 
 -- Height of each row in list views
-local LINE_HEIGHT = 20
+local LINE_HEIGHT = 24
 
 -- Total vertical space available for scrollable content
 local TOTAL_HEIGHT = WINDOW_HEIGHT - 180              -- Account for header/footer spacing
