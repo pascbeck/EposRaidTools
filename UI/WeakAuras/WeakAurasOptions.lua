@@ -153,16 +153,13 @@ function BuildWeakAurasOptions()
                     if EposRT.WeakAurasOptions.show == id then
                         EposRT.WeakAurasOptions.show = list[1] or nil
                     end
-                    if not next(EposRT.WeakAurasOptions.fetch or {}) then
-                        EposRT.WeakAurasOptions.show = nil
-                    end
 
                     -- Refresh the dropdown and tab if they exist
                     if EposUI and EposUI.weakauras_tab then
                         local dd = EposUI.weakauras_tab.__waDropdown
                         if dd then
                             dd:Refresh()
-                            dd:Select(EposRT.WeakAurasOptions.fetch[1])
+                            dd:Select(EposRT.WeakAurasOptions.show)
                             EposUI.weakauras_tab:MasterRefresh()
                         end
                     end

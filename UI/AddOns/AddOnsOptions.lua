@@ -165,7 +165,7 @@ function BuildAddOnsOptions()
                         local dd = EposUI.addons_tab.__addonDropdown
                         if dd then
                             dd:Refresh()
-                            dd:Select(EposRT.AddOnsOptions.fetch[1])
+                            dd:Select(EposRT.AddOnsOptions.show)
                             EposUI.addons_tab:MasterRefresh()
                         end
                     end

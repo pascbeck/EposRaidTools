@@ -75,55 +75,7 @@ function BuildSetupsManagerUI(parent)
                     DF:Msg("Select a boss first.")
                     return
                 end
-                -- TODO: replace with your real apply logic
-                Epos:ApplyGroups({
-                    "Bluupriest",
-                    "Rifala",
-                    "Xolz-Blackrock",
-                    "Olowakandi-Blackrock",
-                    "Rifpriest-Teldrassil",
-                    "Rifala-Arygos",
-                    "Rifdh",
-                    "Dafvoker",
-                    "Rifalâ",
-                    "Ðafuqq-Eredar",
-                    "Rifdruid",
-                    "Pâran-Blackrock",
-                    "Mishyeru",
-                    "Rifala-Aegwynn",
-                    "Matsuzaka",
-                    "Cutesypoo-Eredar",
-                    "Greenmagus",
-                    "Herumi-Eredar",
-                    "Dafuqq-Aegwynn",
-                    "Mitcheru-Eredar",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    --"Rifpriest",
-                    --"Rifmage",
-                    --"Araiguma",
-                    --"Pasikari",
-                    --"Riflock-Rajaxx",
-                    --"Péek-Eredar",
-                })
+                Epos:ApplyGroups(EposRT.SetupsManager.setups[EposRT.SetupsManager.show].sort)
             end,
             C.tabs.buttonWidth, C.tabs.buttonHeight,
             "Apply Roster",
@@ -232,38 +184,41 @@ function BuildSetupsManagerUI(parent)
     -- @param offset     number     Index offset into `data`
     -- @param totalLines number     Number of line frames to update
     local function RefreshLines(self, data, offset, totalLines)
-        for i = 1, totalLines do
-            local entry = data[i + offset]
-            local line = self:GetLine(i)
+        if next(EposRT.SetupsManager.setups or {}) then
+            for i = 1, totalLines do
+                local entry = data[i + offset]
+                local line = self:GetLine(i)
 
-            local function setRole(label, name)
-                if name and name ~= "" then
-                    local displayName = stripRealm(name)
-                    local color = getClassColor(name)
-                    label:SetText(displayName)
-                    label:SetTextColor(color.r, color.g, color.b)
-                else
-                    label:SetText("")
-                    label:SetTextColor(1, 1, 1)
+                local function setRole(label, name)
+                    if name and name ~= "" then
+                        local displayName = stripRealm(name)
+                        local color = getClassColor(name)
+                        label:SetText(displayName)
+                        label:SetTextColor(color.r, color.g, color.b)
+                    else
+                        label:SetText("")
+                        label:SetTextColor(1, 1, 1)
+                    end
                 end
-            end
 
-            if line then
-                if entry then
-                    setRole(line.tank, entry.tanks)
-                    setRole(line.healer, entry.healers)
-                    setRole(line.melee, entry.melee)
-                    setRole(line.ranged, entry.ranged)
-                    setRole(line.benched, entry.benched)
-                else
-                    setRole(line.tank, nil)
-                    setRole(line.healer, nil)
-                    setRole(line.melee, nil)
-                    setRole(line.ranged, nil)
-                    setRole(line.benched, nil)
+                if line then
+                    if entry then
+                        setRole(line.tank, entry.tanks)
+                        setRole(line.healer, entry.healers)
+                        setRole(line.melee, entry.melee)
+                        setRole(line.ranged, entry.ranged)
+                        setRole(line.benched, entry.benched)
+                    else
+                        setRole(line.tank, nil)
+                        setRole(line.healer, nil)
+                        setRole(line.melee, nil)
+                        setRole(line.ranged, nil)
+                        setRole(line.benched, nil)
+                    end
                 end
             end
         end
+
     end
 
 

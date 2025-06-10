@@ -51,6 +51,8 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
       EposRT.WeakAurasOptions = EposRT.WeakAurasOptions or {}
       EposRT.AddOnsOptions    = EposRT.AddOnsOptions    or {}
       EposRT.SetupsManager    = EposRT.SetupsManager    or {}
+      EposRT.enableIntervalFetching = EposRT.enableIntervalFetching or false
+      EposRT.fetchInterval = fetchInterval or 0
 
 
       -- Register “EPOSDATABASE” communication channel via AceComm (if available)

@@ -148,24 +148,27 @@ function BuildSetupsManagerOptions()
     -- @param offset     number     Starting index offset into data.
     -- @param totalLines number     Number of line frames to update.
     local function refresh(self, data, offset, totalLines)
-        for i = 1, totalLines do
-            local index = i + offset
-            local entry = data[index]
-            if entry then
-                local line = self:GetLine(i)
+        if next(EposRT.SetupsManager.setups or {}) then
+            for i = 1, totalLines do
+                local index = i + offset
+                local entry = data[index]
+                if entry then
+                    local line = self:GetLine(i)
 
 
-                if entry and entry.icon then
-                    line.iconTexture:SetTexture(entry.icon)  -- <- numeric icon ID
-                    line.iconTexture:Show()
-                else
-                    line.iconTexture:Hide()
+                    if entry and entry.icon then
+                        line.iconTexture:SetTexture(entry.icon)  -- <- numeric icon ID
+                        line.iconTexture:Show()
+                    else
+                        line.iconTexture:Hide()
+                    end
+
+                    -- Name (Title)
+                    line.nameLabel:SetText(entry.name)
                 end
-
-                -- Name (Title)
-                line.nameLabel:SetText(entry.name)
             end
         end
+
     end
 
     local function createLineFunc(self, index)
@@ -251,7 +254,7 @@ function BuildSetupsManagerOptions()
                 function()
                     local id = line.nameLabel.text
                     if id then
-                        print("Apply clicked for:", id) -- Replace with actual logic
+                        Epos:ApplyGroups(EposRT.SetupsManager.setups[id].sort)
                     end
                 end,
                 50, -- width

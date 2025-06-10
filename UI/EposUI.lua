@@ -86,7 +86,7 @@ function EposUI:Init()
         {
             type          = "label",
             get           = function() return "General Options" end,
-            text_template = C.templates.text,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type     = "toggle",
@@ -105,6 +105,25 @@ function EposUI:Init()
                 end
             end,
         },
+
+        {
+            type     = "toggle",
+            boxfirst = true,
+            name     = "Disable all prints",
+            desc     = "Disables all Epos Raid Tools prints",
+            get      = function()
+                EposRT.Settings = EposRT.Settings or {}
+                EposRT.Settings.Minimap = EposRT.Settings.Minimap or { hide = false }
+                return EposRT.Settings.Minimap.hide
+            end,
+            set      = function(_, _, value)
+                EposRT.Settings.Minimap.hide = value
+                if LDBIcon then
+                    LDBIcon:Refresh("EposRT", EposRT.Settings.Minimap)
+                end
+            end,
+        },
+
         {
             type     = "toggle",
             boxfirst = true,
@@ -118,18 +137,77 @@ function EposUI:Init()
                 EposRT.Settings.Debug = value
             end,
         },
+        --{ type = "break" },
+        --{
+        --    type    = "select",
+        --    get     = function() return "MEDIUM" end,
+        --    values  = function() return {} end,
+        --    name    = "Frame Strata",
+        --    desc    = "Choose Frame Strata for Epos Raid Tools.",
+        --    nocombat = true,
+        --},
         { type = "break" },
         {
-            type    = "select",
-            get     = function() return "MEDIUM" end,
-            values  = function() return {} end,
-            name    = "Frame Strata",
-            desc    = "Choose Frame Strata for Epos Raid Tools.",
+            type          = "label",
+            get           = function() return "Automatic Background Update" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type     = "toggle",
+            boxfirst = true,
+            name     = "Log sender name on data receive",
+            desc     = "Prints sender on data receive",
+            get      = function() return EposRT.enableIntervalFetching end,
+            set      = function(_, _, value)
+                EposRT.enableIntervalFetching = value
+            end,
             nocombat = true,
         },
         {
+            type     = "toggle",
+            boxfirst = true,
+            name     = "Enable data request on player login",
+            desc     = "Sends data request to the player who recently logged in",
+            get      = function() return EposRT.enableIntervalFetching end,
+            set      = function(_, _, value)
+                EposRT.enableIntervalFetching = value
+            end,
+            nocombat = true,
+        },
+        {
+            type     = "toggle",
+            boxfirst = true,
+            name     = "Enable interval fetching",
+            desc     = "Enable periodic roster updates",
+            get      = function() return EposRT.enableIntervalFetching end,
+            set      = function(_, _, value)
+                EposRT.enableIntervalFetching = value
+            end,
+            nocombat = true,
+        },
+        {
+            type     = "slider",
+            name     = "Interval (Seconds)",
+            desc     = "How often to fetch updated roster info",
+            min      = 1,
+            max      = 60,
+            step     = 1,
+            get      = function() return EposRT.fetchInterval end,
+            set      = function(_, _, value)
+                EposRT.fetchInterval = value
+            end,
+            disabled = function() return not EposRT.enableIntervalFetching end,
+            nocombat = true,
+        },
+        { type = "break" },
+        {
+            type          = "label",
+            get           = function() return "Developer" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
             type = "execute",
-            name = "Clear EposRT Data",
+            name = "Clear Database",
             desc = "Erase all saved settings and reload the UI.",
             func = function()
                 wipe(EposRT)

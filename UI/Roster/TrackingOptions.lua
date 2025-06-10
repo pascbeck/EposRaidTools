@@ -66,45 +66,6 @@ function BuildTrackingOptions()
     -- Spacer
     options[#options + 1] = { type = "break" }
 
-    -- Section: Automatic Background Update Label
-    options[#options + 1] = {
-        type          = "label",
-        get           = function() return "Automatic Background Update" end,
-        text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-    }
-
-    ---- Toggle: Enable Interval Fetching
-    --options[#options + 1] = {
-    --    type     = "toggle",
-    --    boxfirst = true,
-    --    name     = "Enable Interval Fetching",
-    --    desc     = "Enable periodic roster updates",
-    --    get      = function() return EposSaved.enableIntervalFetching end,
-    --    set      = function(_, _, value)
-    --        EposSaved.enableIntervalFetching = value
-    --    end,
-    --    nocombat = true,
-    --}
-
-    ---- Slider: Interval (Seconds)
-    --options[#options + 1] = {
-    --    type     = "slider",
-    --    name     = "Interval (Seconds)",
-    --    desc     = "How often to fetch updated roster info",
-    --    min      = 1,
-    --    max      = 60,
-    --    step     = 1,
-    --    get      = function() return EposSaved.fetchInterval end,
-    --    set      = function(_, _, value)
-    --        EposSaved.fetchInterval = value
-    --    end,
-    --    disabled = function() return not EposSaved.enableIntervalFetching end,
-    --    nocombat = true,
-    --}
-
-    -- Spacer
-    options[#options + 1] = { type = "break" }
-
     -- Section: Blacklist & Whitelist Label
     options[#options + 1] = {
         type          = "label",

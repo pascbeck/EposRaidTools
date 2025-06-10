@@ -159,7 +159,10 @@ function BuildCrestsOptions()
                     end
 
                     -- Update “show” to first entry or nil
-                    EposRT.CrestsOptions.show = list[1] or nil
+                    if EposRT.CrestsOptions.show == id then
+                        EposRT.CrestsOptions.show = list[1] or nil
+                    end
+
 
                     -- Refresh the dropdown and tab if they exist
                     if EposUI and EposUI.crests_tab then
