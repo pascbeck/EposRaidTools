@@ -17,7 +17,7 @@ function BuildAddOnsInterface(parent)
     local requestDataButton = DF:CreateButton(
             parent,
             function()
-                --
+                Epos:RequestData("EPOS_REQUEST", "GUILD", nil)
             end,
             C.tabs.buttonWidth,
             C.tabs.buttonHeight,
@@ -122,7 +122,7 @@ function BuildAddOnsInterface(parent)
                         rank = player.rank,
                         installed = addon and "True" or "False",
                         version = addon and (addon.version or "-") or "-",
-                        loaded = addon and (addon.isLoaded and "True" or "False") or "False",
+                        loaded = addon and (addon.loaded and "True" or "False") or "False",
                         ts = timestamp,
                     })
                 end

@@ -17,7 +17,7 @@ function BuildWeakAurasInterface(parent)
     local requestDataButton = DF:CreateButton(
             parent,
             function()
-                --
+                Epos:RequestData("EPOS_REQUEST", "GUILD", nil)
             end,
             C.tabs.buttonWidth,
             C.tabs.buttonHeight,
@@ -110,8 +110,8 @@ function BuildWeakAurasInterface(parent)
             local playerDatabaseEntry = EposRT.GuildRoster.Database[player.name]
             if playerDatabaseEntry and next(EposRT.WeakAuras.Fetch) then
                 local timestamp = playerDatabaseEntry.timestamp and date("%Y-%m-%d %H:%M", playerDatabaseEntry.timestamp) or "-"
-                local weakaura = playerDatabaseEntry.weakaura
-                        and playerDatabaseEntry.weakaura[EposRT.WeakAuras.Current]
+                local weakaura = playerDatabaseEntry.weakauras
+                        and playerDatabaseEntry.weakauras[EposRT.WeakAuras.Current]
                         or nil
 
                 if EposRT.GuildRoster.Tracked[player.rank] and not EposRT.GuildRoster.Blacklist[player.name] then
@@ -121,7 +121,7 @@ function BuildWeakAurasInterface(parent)
                         rank = player.rank,
                         installed = weakaura and "True" or "False",
                         version = weakaura and (weakaura.semver or "-") or "-",
-                        loaded = weakaura and (weakaura.isLoaded and "True" or "False") or "False",
+                        loaded = weakaura and (weakaura.loaded and "True" or "False") or "False",
                         ts = timestamp,
                     })
                 end

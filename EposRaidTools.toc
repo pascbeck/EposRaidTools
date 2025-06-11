@@ -17,6 +17,7 @@ constants.lua
 # Main Files
 EposRaidTools.lua
 EposEventHandler.lua
+EposDataBroadcast.lua
 
 # Database
 Interface\Database\Database+Options.lua

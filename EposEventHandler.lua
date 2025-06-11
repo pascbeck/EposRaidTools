@@ -94,9 +94,6 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
             EposRT.Setups.AssignmentHandler.lockedUnit = {}
             EposRT.Setups.AssignmentHandler.groupsReady = false
             EposRT.Setups.AssignmentHandler.groupWithRL = nil
-
-            -- RegisterComm
-            Epos:RegisterComm()
         end
 
 
@@ -113,49 +110,22 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
 
     elseif eventName == "GROUP_ROSTER_UPDATE" and isWoWEvent then
 
-    elseif eventName == "EPOSDATABASE" and isInternal then
+    elseif eventName == "EPOS_MSG" and isInternal then
         local payload, sender = ...
-        if sender == "Bluupriest" or sender == "Bluutotem" then
-            -- store db entry
-            EposRT.GuildRoster.Database[payload.name] = payload
 
-            -- refresh tabs
+        -- ask data on player login
+        if payload.event == "PLAYER_ENTERING_WORLD" then
+            Epos:RequestData("EPOS_REQUEST", "WHISPER", sender)
+
+            -- received data
+        elseif payload.event == "EPOS_DATA" then
+            DevTools_Dump(payload.data)
+            EposRT.GuildRoster.Database[payload.data.name] = payload.data
+
             EposUI.DatabaseTab:MasterRefresh()
             EposUI.CrestsTab:MasterRefresh()
             EposUI.WeakAurasTab:MasterRefresh()
             EposUI.AddOnsTab:MasterRefresh()
         end
-
-    end
-end
-
-function Epos:RegisterComm()
-    local AceComm = LibStub("AceComm-3.0", true)
-    if AceComm then
-        AceComm:RegisterComm("EPOSDATABASE", function(prefix, encoded, distribution, sender)
-            local LibDeflate = LibStub("LibDeflate", true)
-            local LibSerialize = LibStub("LibSerialize", true)
-            if not (LibDeflate and LibSerialize) then
-                return
-            end
-
-            local decoded = LibDeflate:DecodeForWoWAddonChannel(encoded)
-            if not decoded then
-                return
-            end
-
-            local decompressed = LibDeflate:DecompressDeflate(decoded)
-            if not decompressed then
-                return
-            end
-
-            local success, payload = LibSerialize:Deserialize(decompressed)
-            if not success then
-                return
-            end
-
-            -- route the payload into your existing handler
-            Epos:HandleEvent("EPOSDATABASE", false, true, payload, sender)
-        end)
     end
 end

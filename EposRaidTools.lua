@@ -93,6 +93,17 @@ function Epos:FetchGuild()
     end
 end
 
+function Epos:RequestData(event, channel, sender)
+    Epos:Broadcast(event, {
+        event = event,
+        data = {
+            currencies = EposRT.Crests.Fetch,
+            weakauras = EposRT.WeakAuras.Fetch,
+            addons = EposRT.AddOns.Fetch
+        }
+    }, "ALERT", channel, sender)
+end
+
 function Epos:Msg(msg)
     print("|cFF00FFFFEpos Raid Tools|r:" .. msg)
 end

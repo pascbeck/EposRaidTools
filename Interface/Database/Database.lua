@@ -17,7 +17,7 @@ function BuildDatabaseInterface(parent)
     local requestDataButton = DF:CreateButton(
             parent,
             function()
-                --
+                Epos:RequestData("EPOS_REQUEST", "GUILD", nil)
             end,
             C.tabs.buttonWidth,
             C.tabs.buttonHeight,

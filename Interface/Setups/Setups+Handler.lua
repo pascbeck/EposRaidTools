@@ -208,5 +208,6 @@ function Epos:ProcessRoster ()
     end
 
     s.needGroup = nil
+    -- Anounce EposRT.Setups.Current.Setup.bench
     Epos.EventFrame:UnregisterEvent('GROUP_ROSTER_UPDATE')
 end
