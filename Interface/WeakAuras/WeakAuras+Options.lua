@@ -191,6 +191,9 @@ function Epos:AddWeakAura (name, parent)
     table_insert(EposRT.WeakAuras.Fetch, name)
     EposRT.WeakAuras.Current = name
 
+    local weakAuraLink = "[WeakAuras: " .. name .. "]"
+    Epos:Msg("Added " .. weakAuraLink .. " to weakauras")
+
     -- refresh
     local dropdown = EposUI.WeakAurasTab.__dropdown
     dropdown:Refresh()
@@ -210,6 +213,9 @@ function Epos:DeleteWeakAura (weakaura, parent)
     if weakaura == EposRT.WeakAuras.Current then
         EposRT.WeakAuras.Current = EposRT.WeakAuras.Fetch[1] or nil
     end
+
+    local weakAuraLink = "[WeakAuras: " .. weakaura .. "]"
+    Epos:Msg("Removed " .. weakAuraLink .. " from weakauras")
 
     -- refresh
     local dropdown = EposUI.WeakAurasTab.__dropdown

@@ -1,5 +1,5 @@
 ## Interface: 110150
-## Title: Epos Raid Tools
+## Title: |cFF78A8FFEpos Raid Tools|r
 ## Version:  1.0.0
 ## IconTexture: Interface\AddOns\EposRaidTools\Media\EposLogo.blp
 ## Author: Bluu

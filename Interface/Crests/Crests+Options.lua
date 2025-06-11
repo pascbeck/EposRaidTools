@@ -193,6 +193,9 @@ function Epos:AddCurrency (id, parent)
     table_insert(EposRT.Crests.Fetch, id)
     EposRT.Crests.Current = id
 
+    local currencyLink = C_CurrencyInfo.GetCurrencyLink(id)
+    Epos:Msg("Added " .. currencyLink .. " to crests")
+
     -- refresh
     local dropdown = EposUI.CrestsTab.__dropdown
     dropdown:Refresh()
@@ -209,9 +212,15 @@ function Epos:DeleteCurrency (currency, parent, line)
         end
     end
 
+    local data = C_CurrencyInfo.GetCurrencyInfo(currency)
+    if not data then return end
+
     if currency == EposRT.Crests.Current then
         EposRT.Crests.Current = EposRT.Crests.Fetch[1] or nil
     end
+
+    local currencyLink = C_CurrencyInfo.GetCurrencyLink(currency)
+    Epos:Msg("Removed " .. currencyLink .. " from crests")
 
     -- refresh
     local dropdown = EposUI.CrestsTab.__dropdown

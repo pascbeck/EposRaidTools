@@ -40,6 +40,16 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
             EposRT.Setups = EposRT.Setups or {}
             EposRT.Settings = EposRT.Settings or {}
 
+            -- Settings
+            EposRT.Settings.Transparency = EposRT.Settings.Transparency or false
+            EposRT.Settings.HideStatusBar = EposRT.Settings.HideStatusBar or false
+            EposRT.Settings.AnnouncementChannel = EposRT.Settings.AnnouncementChannel or "WHISPER"
+            EposRT.Settings.AnnounceBenchedPlayers = EposRT.Settings.AnnounceBenchedPlayers or true
+            EposRT.Settings.EnableEventLogging = EposRT.Settings.EnableEventLogging or false
+            EposRT.Settings.EnableDataRequestOnLoginEvent = EposRT.Settings.EnableDataRequestOnLoginEvent or true
+            EposRT.Settings.EnableDataReceiveLogging = EposRT.Settings.EnableDataReceiveLogging or true
+            EposRT.Settings.Debug = EposRT.Settings.Debug or false
+
             -- GuildRoster
             EposRT.GuildRoster.Database = EposRT.GuildRoster.Database or {}
             EposRT.GuildRoster.Players = EposRT.GuildRoster.Players or {}
@@ -119,12 +129,6 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
 
             -- received data
         elseif payload.event == "EPOS_DATA" then
-            print(sender)
-            if sender == "Cutesypoo-Eredar" then
-                print("is from my gurl")
-                DevTools_Dump(payload)
-            end
-
             EposRT.GuildRoster.Database[payload.data.name] = payload.data
 
             EposUI.DatabaseTab:MasterRefresh()

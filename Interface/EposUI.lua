@@ -20,7 +20,7 @@ local EposUI = DF:CreateSimplePanel(
         UIParent,
         C.window_width,
         C.window_height,
-        "Epos Raid Tools",
+        "|cFF78A8FFEpos|r Raid Tools",
         "EposUI",
         PANEL_OPTIONS
 )
@@ -72,155 +72,178 @@ function EposUI:Init()
     local setupTab = tabContainer:GetTabFrameByName("Setup")
     local settingsTab = tabContainer:GetTabFrameByName("Settings")
 
+    local strataTable = {
+        {value = "BACKGROUND", label = "Background", onclick = onStrataSelect, icon = [[Interface\Buttons\UI-MicroStream-Green]], iconcolor = {0, .5, 0, .8}, texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
+        {value = "LOW", label = "Low", onclick = onStrataSelect, icon = [[Interface\Buttons\UI-MicroStream-Green]] , texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
+        {value = "MEDIUM", label = "Medium", onclick = onStrataSelect, icon = [[Interface\Buttons\UI-MicroStream-Yellow]] , texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
+        {value = "HIGH", label = "High", onclick = onStrataSelect, icon = [[Interface\Buttons\UI-MicroStream-Yellow]] , iconcolor = {1, .7, 0, 1}, texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
+        {value = "DIALOG", label = "Dialog", onclick = onStrataSelect, icon = [[Interface\Buttons\UI-MicroStream-Red]] , iconcolor = {1, 0, 0, 1},  texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
+    }
+    local buildStrataMenu = function() return strataTable end
+
+    local channel_list = {
+        {value = "PRINT", icon = [[Interface\LFGFRAME\BattlenetWorking2]], iconsize = {14, 14}, iconcolor = {1, 1, 1, 1}, texcoord = {12/64, 53/64, 11/64, 53/64}, label = "Print", onclick},
+        {value = "SAY", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconsize = {14, 14}, texcoord = {0.0390625, 0.203125, 0.09375, 0.375}, label = "Say"},
+        {value = "YELL", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconsize = {14, 14}, texcoord = {0.0390625, 0.203125, 0.09375, 0.375}, iconcolor = {1, 0.3, 0, 1}, label = "Yell", onclick},
+        {value = "RAID", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconcolor = {1, 0.49, 0}, iconsize = {14, 14}, texcoord = {0.53125, 0.7265625, 0.078125, 0.40625}, label = "Raid", onclick},
+        {value = "WHISPER", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconcolor = {1, 0.49, 1}, iconsize = {14, 14}, texcoord = {0.0546875, 0.1953125, 0.625, 0.890625}, label = "Whisper", onclick},
+    }
+    local buildChannelMenu = function()
+        return channel_list
+    end
+
     -- Table of option descriptors passed to BuildMenu on the Settings tab
     local settingsOptions = {
-        --{
-        --    type = "label",
-        --    get = function()
-        --        return "General Options"
-        --    end,
-        --    text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        --},
-        --{
-        --    type = "toggle",
-        --    boxfirst = true,
-        --    name = "Disable Minimap Button",
-        --    desc = "Hide the minimap button.",
-        --    get = function()
-        --        EposRT.Settings = EposRT.Settings or {}
-        --        EposRT.Settings.Minimap = EposRT.Settings.Minimap or { hide = false }
-        --        return EposRT.Settings.Minimap.hide
-        --    end,
-        --    set = function(_, _, value)
-        --        EposRT.Settings.Minimap.hide = value
-        --        if LDBIcon then
-        --            LDBIcon:Refresh("EposRT", EposRT.Settings.Minimap)
-        --        end
-        --    end,
-        --},
-        --
-        --{
-        --    type = "toggle",
-        --    boxfirst = true,
-        --    name = "Disable all prints",
-        --    desc = "Disables all Epos Raid Tools prints",
-        --    get = function()
-        --        EposRT.Settings = EposRT.Settings or {}
-        --        EposRT.Settings.Minimap = EposRT.Settings.Minimap or { hide = false }
-        --        return EposRT.Settings.Minimap.hide
-        --    end,
-        --    set = function(_, _, value)
-        --        EposRT.Settings.Minimap.hide = value
-        --        if LDBIcon then
-        --            LDBIcon:Refresh("EposRT", EposRT.Settings.Minimap)
-        --        end
-        --    end,
-        --},
-        --
-        --{
-        --    type = "toggle",
-        --    boxfirst = true,
-        --    name = "Enable Debug Mode",
-        --    desc = "Bypass encounter/combat/raid restrictions for testing.",
-        --    get = function()
-        --        EposRT.Settings = EposRT.Settings or {}
-        --        return EposRT.Settings.Debug or false
-        --    end,
-        --    set = function(_, _, value)
-        --        EposRT.Settings.Debug = value
-        --    end,
-        --},
-        ----{ type = "break" },
-        ----{
-        ----    type    = "select",
-        ----    get     = function() return "MEDIUM" end,
-        ----    values  = function() return {} end,
-        ----    name    = "Frame Strata",
-        ----    desc    = "Choose Frame Strata for Epos Raid Tools.",
-        ----    nocombat = true,
-        ----},
-        --{ type = "break" },
-        --{
-        --    type = "label",
-        --    get = function()
-        --        return "Automatic Background Update"
-        --    end,
-        --    text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        --},
-        --{
-        --    type = "toggle",
-        --    boxfirst = true,
-        --    name = "Log sender name on data receive",
-        --    desc = "Prints sender on data receive",
-        --    get = function()
-        --        return EposRT.enableIntervalFetching
-        --    end,
-        --    set = function(_, _, value)
-        --        EposRT.enableIntervalFetching = value
-        --    end,
-        --    nocombat = true,
-        --},
-        --{
-        --    type = "toggle",
-        --    boxfirst = true,
-        --    name = "Enable data request on player login",
-        --    desc = "Sends data request to the player who recently logged in",
-        --    get = function()
-        --        return EposRT.enableIntervalFetching
-        --    end,
-        --    set = function(_, _, value)
-        --        EposRT.enableIntervalFetching = value
-        --    end,
-        --    nocombat = true,
-        --},
-        --{
-        --    type = "toggle",
-        --    boxfirst = true,
-        --    name = "Enable interval fetching",
-        --    desc = "Enable periodic roster updates",
-        --    get = function()
-        --        return EposRT.enableIntervalFetching
-        --    end,
-        --    set = function(_, _, value)
-        --        EposRT.enableIntervalFetching = value
-        --    end,
-        --    nocombat = true,
-        --},
-        --{
-        --    type = "slider",
-        --    name = "Interval (Seconds)",
-        --    desc = "How often to fetch updated roster info",
-        --    min = 1,
-        --    max = 60,
-        --    step = 1,
-        --    get = function()
-        --        return EposRT.fetchInterval
-        --    end,
-        --    set = function(_, _, value)
-        --        EposRT.fetchInterval = value
-        --    end,
-        --    disabled = function()
-        --        return not EposRT.enableIntervalFetching
-        --    end,
-        --    nocombat = true,
-        --},
-        --{ type = "break" },
-        --{
-        --    type = "label",
-        --    get = function()
-        --        return "Developer"
-        --    end,
-        --    text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        --},
-        --{
-        --    type = "execute",
-        --    name = "Clear Database",
-        --    desc = "Erase all saved settings and reload the UI.",
-        --    func = function()
-        --        wipe(EposRT)
-        --        ReloadUI()
-        --    end,
-        --},
+        {
+            type = "label",
+            get = function()
+                return "General Options"
+            end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Disable Minimap Button",
+            desc = "Hide the minimap button.",
+            get = function() return EposRT.Settings.Minimap.hide end,
+            set = function(_, _, value)
+                EposRT.Settings.Minimap.hide = value
+                if LDBIcon then
+                    LDBIcon:Refresh("EposRT", EposRT.Settings.Minimap)
+                end
+            end,
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Data Receive in Chat",
+            desc = "Prints sender on data receive",
+            get = function() return EposRT.Settings.EnableDataReceiveLogging end,
+            set = function(_, _, value) EposRT.Settings.EnableDataReceiveLogging = value end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Data Request on Player Login",
+            desc = "Sends data request to the player who recently logged in",
+            get = function() return EposRT.Settings.EnableDataRequestOnLoginEvent end,
+            set = function(_, _, value) EposRT.EnableDataRequestOnLoginEvent = value end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Event Logging",
+            desc = "Enable logging of important raid events for future reference.",
+            get = function() return EposRT.Settings.EnableEventLogging or false end,
+            set = function(_, _, value) EposRT.Settings.EnableEventLogging = value end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Debug Mode",
+            desc = "Enables Debug Mode",
+            get = function() return EposRT.Settings.Debug or false end,
+            set = function(_, _, value) EposRT.Settings.Debug = value end,
+        },
+        {
+            type = "execute",
+            name = "Clear Database",
+            desc = "Erase all saved settings and reload the UI.",
+            icontexture = [[Interface\GLUES\LOGIN\Glues-CheckBox-Check]],
+            func = function()
+                wipe(EposRT)
+                ReloadUI()
+            end,
+        },
+        { type = "break" },
+        {
+            type = "label",
+            get = function()
+                return "Setup Options"
+            end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Announce Benched Players",
+            desc = "Announces benched players for current setup when applying roster (whisper)",
+            get = function()
+                return EposRT.Settings.AnnounceBenchedPlayers
+            end,
+            set = function(_, _, value)
+                EposRT.Settings.AnnounceBenchedPlayers = value
+            end,
+        },
+        {
+            type = "select",
+            get = function() return EposRT.Settings.AnnouncementChannel end,
+            values = buildChannelMenu,
+            name = "Channel",
+            desc = "Select the channel for announcing benched players.",
+            set = function(_, _, value)
+                EposRT.Settings.AnnouncementChannel = value
+            end,
+            nocombat = true,  -- Ensure this can be changed outside of combat
+        },
+        { type = "break" },
+        {
+            type = "label",
+            get = function()
+                return "Interface Options"
+            end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "select",
+            get = function() return EposRT.Settings.FrameStrata or "HIGH" end,
+            values = buildStrataMenu,
+            name = "Frame Strata",
+            desc = "Choose the frame strata for Epos Raid Tools. Higher strata will place the UI above more UI elements.",
+            set = function(_, _, value)
+                EposRT.Settings.FrameStrata = value
+                EposUI:SetFrameStrata(value) -- Set the frame strata dynamically
+            end,
+            nocombat = true,  -- Ensure this can be changed outside of combat
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Transparency",
+            desc = "Enable or disable the transparency of the UI window.",
+            get = function()
+                return EposRT.Settings.Transparency
+            end,
+            set = function(_, _, value)
+                EposRT.Settings.Transparency = value
+                if value then
+                    EposUI:SetBackdropColor(0, 0, 0, 0.9)
+                else
+                    EposUI:SetBackdropColor(0, 0, 0, 1)
+                end
+            end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Status Bar",
+            desc = "Hide or show the status bar.",
+            get = function()
+                return EposRT.Settings.HideStatusBar
+            end,
+            set = function(_, _, value)
+                EposRT.Settings.HideStatusBar = value
+                if value then
+                    EposUI.StatusBar:Hide()
+                else
+                    EposUI.StatusBar:Show()
+                end
+            end,
+        }
     }
 
     -- Build Empty/AddOn & Setup Menus
@@ -267,7 +290,22 @@ function EposUI:Init()
     if self.StatusBar and self.StatusBar.authorName then
         self.StatusBar.authorName:SetText(statusText)
     end
+
+
+    if EposRT.Settings.Transparency then
+        EposUI:SetBackdropColor(0, 0, 0, 0.9)
+    else
+        EposUI:SetBackdropColor(0, 0, 0, 1)
+    end
+
+    -- Ensure status bar visibility is correct on load
+    if EposRT.Settings.HideStatusBar then
+        EposUI.StatusBar:Hide()
+    else
+        EposUI.StatusBar:Show()
+    end
 end
+
 
 -- Toggles visibility of the main UI panel.
 function EposUI:ToggleMainFrame()

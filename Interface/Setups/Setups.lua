@@ -48,11 +48,13 @@ function BuildSetupsInterface(parent)
         table.sort(bossNames)
 
         -- Generate dropdown options based on sorted boss names
-        for _, boss in ipairs(bossNames) do
+        for i, boss in ipairs(bossNames) do
             local setup = EposRT.Setups.JSON[boss]
             table_insert(opts, {
                 label = boss,
                 value = { Boss = boss, Setup = setup },
+                icon = C.bossIcons[i],
+                iconsize = {20, 20},
                 onclick = function(_, _, val)
                     EposRT.Setups.Current = val
                     EposUI.SetupsTab:MasterRefresh()
@@ -77,6 +79,13 @@ function BuildSetupsInterface(parent)
     local applyRosterBtn = DF:CreateButton(
             parent,
             function()
+                local index = EposRT.Setups.Current.Boss:match("^(%d+)")
+                local _, _, _, _, link = EJ_GetEncounterInfoByIndex(index, 1296)
+                local displayText = "You are benched for: " .. link
+
+                for _, bench in pairs(EposRT.Setups.Current.Setup.benched) do
+                    SendChatMessage(displayText, "WHISPER", nil, "Bluupriest-Blackhand")  -- Replace with actual player names
+                end
             end,
             C.tabs.buttonWidth, C.tabs.buttonHeight,
             "Apply Roster",

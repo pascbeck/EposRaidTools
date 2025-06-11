@@ -192,6 +192,9 @@ function Epos:AddAddOn (input, parent)
     table_insert(EposRT.AddOns.Fetch, input)
     EposRT.AddOns.Current = input
 
+    local title = C_AddOns.GetAddOnMetadata(input, "Title") or input
+    Epos:Msg("Added " .. title .. " to addons")
+
     -- refresh
     local dropdown = EposUI.AddOnsTab.__dropdown
     dropdown:Refresh()
@@ -211,6 +214,10 @@ function Epos:DeleteAddOn (addon, parent)
     if addon == EposRT.AddOns.Current then
         EposRT.AddOns.Current = EposRT.AddOns.Fetch[1] or nil
     end
+
+
+    local title = C_AddOns.GetAddOnMetadata(addon, "Title") or addon
+    Epos:Msg("Removed " .. title .. " from addons")
 
     -- refresh
     local dropdown = EposUI.AddOnsTab.__dropdown

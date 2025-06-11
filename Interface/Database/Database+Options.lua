@@ -59,7 +59,7 @@ function BuildDatabaseInterfaceOptions()
             get      = function() return EposRT.GuildRoster.Tracked[rankName] end,
             set      = function(_, _, value)
                 EposRT.GuildRoster.Tracked[rankName] = value
-
+                Epos:Msg((value and "Enabled " or "Disabled ") .. "'" .. rankName .. "'" .. " rank for data requests")
                 -- refresh
                 EposUI.DatabaseTab:MasterRefresh()
                 EposUI.CrestsTab:MasterRefresh()
@@ -132,7 +132,6 @@ function BuildDatabaseInterfaceOptionsBlacklist()
             return a.name < b.name
         end)
 
-        DevTools_Dump(data)
         return data
     end
 
@@ -258,12 +257,31 @@ function Epos:AddBlacklistEntry(name, parent)
     if not guildEntry then return end
 
     EposRT.GuildRoster.Blacklist[name] = true
+
+    -- Get the player's class color
+    local classColor = RAID_CLASS_COLORS[guildEntry.class] or { r = 1, g = 1, b = 1 } -- default to white if no class is found
+    local classColorCode = string.format("|cff%02x%02x%02x", classColor.r * 255, classColor.g * 255, classColor.b * 255)
+
+    -- Send the message with class color for name
+    Epos:Msg("Added " .. classColorCode .. name .. "|r to Blacklist")
+
     EposUI.DatabaseTab:MasterRefresh()
     parent.scrollbox:MasterRefresh()
 end
 
 function Epos:DeleteBlacklistEntry(name, parent)
+    local guildEntry = EposRT.GuildRoster.Players[name]
+    if not guildEntry then return end
+
+    -- Get the player's class color
+    local classColor = RAID_CLASS_COLORS[guildEntry.class] or { r = 1, g = 1, b = 1 } -- default to white if no class is found
+    local classColorCode = string.format("|cff%02x%02x%02x", classColor.r * 255, classColor.g * 255, classColor.b * 255)
+
     EposRT.GuildRoster.Blacklist[name] = nil
+
+    -- Send the message with class color for name
+    Epos:Msg("Removed " .. classColorCode .. name .. "|r from Blacklist")
+
     parent.scrollbox:MasterRefresh()
     EposUI.DatabaseTab:MasterRefresh()
 end

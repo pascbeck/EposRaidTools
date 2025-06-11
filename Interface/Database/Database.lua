@@ -30,6 +30,18 @@ function BuildDatabaseInterface(parent)
     requestDataButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", C.tabs.rightPadding, C.tabs.startY)
     requestDataButton.tooltip = "Sends data request to current selected players"
 
+    requestDataButton:SetIcon(
+            [[Interface\GLUES\CharacterSelect\RestoreButton]],  -- Texture path
+            24,                                      -- Icon width
+            24,                                      -- Icon height
+            nil,                                     -- Layout (leave as nil for default)
+            nil,                                     -- Texcoord (optional, can leave as nil for default)
+            nil,                                     -- Overlay (optional, can leave as nil)
+            nil,                                     -- Text distance (optional)
+            4,                                     -- Left padding (optional)
+            nil                                      -- Short method (optional)
+    )
+
     -- Database Options Button
     local databaseOptionsButton = DF:CreateButton(
             parent,

@@ -35,9 +35,9 @@ local TEMPLATES = {
 --- Color Definitions
 -- Header text color (RGB normalized 0–1)
 local COLORS = {
-    headerColorR = 0,
-    headerColorG = 1,
-    headerColorB = 1,
+    headerColorR = 120 / 255,  -- Normalizing the red value
+    headerColorG = 170 / 255,  -- Normalizing the green value
+    headerColorB = 255 / 255,  -- Normalizing the blue value
 }
 
 --- Tab Configuration
@@ -53,6 +53,17 @@ local TABS = {
     lineHeight   = LINE_HEIGHT,
     totalHeight  = TOTAL_HEIGHT,
     visibleRows  = VISIBLE_ROWS,
+}
+
+local BOSS_ICONS = {
+    6392628,
+    6253176,
+    6392625,
+    6392627,
+    6392626,
+    6392624,
+    6392623,
+    6392621
 }
 
 --- Combine into Epos.Constants
@@ -75,4 +86,6 @@ Epos.Constants = {
 
     -- Placeholder for additional option constants (populated at runtime)
     options   = {},
+
+    bossIcons = BOSS_ICONS,
 }

@@ -30,6 +30,18 @@ function BuildAddOnsInterface(parent)
     requestDataButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", C.tabs.rightPadding, C.tabs.startY)
     requestDataButton.tooltip = "Sends data request to current selected players"
 
+    requestDataButton:SetIcon(
+            [[Interface\GLUES\CharacterSelect\RestoreButton]],  -- Texture path
+            24,                                      -- Icon width
+            24,                                      -- Icon height
+            nil,                                     -- Layout (leave as nil for default)
+            nil,                                     -- Texcoord (optional, can leave as nil for default)
+            nil,                                     -- Overlay (optional, can leave as nil)
+            nil,                                     -- Text distance (optional)
+            4,                                     -- Left padding (optional)
+            nil                                      -- Short method (optional)
+    )
+
     -- AddOns Options Button
     local addonsOptionsButton = DF:CreateButton(
             parent,
@@ -55,10 +67,13 @@ function BuildAddOnsInterface(parent)
         local t = {}
         for _, addon in pairs(EposRT.AddOns.Fetch) do
             local name = C_AddOns.GetAddOnMetadata(addon, "Title") or addon
+            local icon = C_AddOns.GetAddOnMetadata(addon, "IconTexture")
 
             table_insert(t, {
                 label = name,
                 value = addon,
+                icon = icon,
+                iconsize = {20, 20},
                 onclick = function(_, _, value)
                     EposRT.AddOns.Current = value
                     EposUI.AddOnsTab:MasterRefresh()

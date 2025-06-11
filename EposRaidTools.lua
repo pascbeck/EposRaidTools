@@ -38,8 +38,8 @@ function Epos:InitLDB()
 
         -- Tooltip displayed when hovering over the icon
         OnTooltipShow = function(tooltip)
-            tooltip:AddLine("Epos Raid Tools", 0, 1, 1)
-            tooltip:AddLine("|cFFCFCFCFLeft click|r: Show/Hide Options Window")
+            tooltip:AddLine("Epos Raid Tools", 120 / 255, 170 / 255, 255 / 255)
+            tooltip:AddLine("|cFFFFA500Left click|r: |cFF00FF00Toggle Main Window|r")
         end,
     })
 
@@ -105,12 +105,12 @@ function Epos:RequestData(event, channel, sender)
 end
 
 function Epos:Msg(msg)
-    print("|cFF00FFFFEpos Raid Tools|r:" .. msg)
+    print("|cFF78A8FFEpos Raid Tools|r: " .. msg)
 end
 
 function Epos:DBGMsg(msg)
-    if EposRT.Settings.debug then
-        print("|cFF00FFFFEpos Raid Tools Debug|r:" .. msg)
+    if EposRT.Settings.Debug then
+        print("|cFF78A8FFEpos Raid Tools Debug|r: " .. msg)
     end
 end
 

@@ -31,6 +31,18 @@ function BuildCrestsInterface(parent)
     requestDataButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", C.tabs.rightPadding, C.tabs.startY)
     requestDataButton.tooltip = "Sends data request to current selected players"
 
+    requestDataButton:SetIcon(
+            [[Interface\GLUES\CharacterSelect\RestoreButton]],  -- Texture path
+            24,                                      -- Icon width
+            24,                                      -- Icon height
+            nil,                                     -- Layout (leave as nil for default)
+            nil,                                     -- Texcoord (optional, can leave as nil for default)
+            nil,                                     -- Overlay (optional, can leave as nil)
+            nil,                                     -- Text distance (optional)
+            4,                                     -- Left padding (optional)
+            nil                                      -- Short method (optional)
+    )
+
     -- Crests Options Button
     local crestsOptionsButton = DF:CreateButton(
             parent,
@@ -60,6 +72,8 @@ function BuildCrestsInterface(parent)
             table_insert(t, {
                 label   = name,
                 value   = id,
+                icon = currency.iconFileID,
+                iconsize = {20, 20},
                 onclick = function(_, _, value)
                     EposRT.Crests.Current = value
                     EposUI.CrestsTab:MasterRefresh()
