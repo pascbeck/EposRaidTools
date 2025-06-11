@@ -109,7 +109,7 @@ function BuildWeakAurasInterface(parent)
         for _, player in pairs(EposRT.GuildRoster.Players) do
             local playerDatabaseEntry = EposRT.GuildRoster.Database[player.name]
             if playerDatabaseEntry and next(EposRT.WeakAuras.Fetch) then
-                local timestamp = playerDatabaseEntry.timestamp and date("%Y-%m-%d %H:%M", playerDatabaseEntry.timestamp) or "-"
+                local timestamp = playerDatabaseEntry.timestamp and date("%d.%m - %H:%M Uhr", playerDatabaseEntry.timestamp) or "-"
                 local weakaura = playerDatabaseEntry.weakauras
                         and playerDatabaseEntry.weakauras[EposRT.WeakAuras.Current]
                         or nil
@@ -119,9 +119,9 @@ function BuildWeakAurasInterface(parent)
                         name = player.name,
                         class = player.class,
                         rank = player.rank,
-                        installed = weakaura and "True" or "False",
-                        version = weakaura and (weakaura.semver or "-") or "-",
-                        loaded = weakaura and (weakaura.loaded and "True" or "False") or "False",
+                        installed = weakaura and true or false,
+                        version = weakaura and weakaura.semver or "-",
+                        loaded = weakaura and weakaura.loaded or false,
                         ts = timestamp,
                     })
                 end
@@ -148,12 +148,11 @@ function BuildWeakAurasInterface(parent)
                 line.name:SetTextColor(Epos:GetClassColorForPlayer(player.name))
 
                 -- Installed
-                line.weakauras:SetText(player.installed)
-
-                -- Installed color
-                if player.installed == "True" then
+                if player.installed == true then
+                    line.weakauras:SetText("Installed")
                     line.weakauras:SetTextColor(0, 1, 0)
                 else
+                    line.weakauras:SetText("Not Installed")
                     line.weakauras:SetTextColor(1, 0, 0)
                 end
 
@@ -161,12 +160,11 @@ function BuildWeakAurasInterface(parent)
                 line.version:SetText(player.version)
 
                 -- Loaded
-                line.loaded:SetText(player.loaded)
-
-                -- Loaded color
-                if player.loaded == "True" then
+                if player.loaded == true then
+                    line.loaded:SetText("Loaded")
                     line.loaded:SetTextColor(0, 1, 0)
                 else
+                    line.loaded:SetText("Not Loaded")
                     line.loaded:SetTextColor(1, 0, 0)
                 end
 

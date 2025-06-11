@@ -123,7 +123,7 @@ function BuildDatabaseInterface(parent)
                 if EposRT.GuildRoster.Database[player.name] then
                     line.trackingStatus:SetText("in Database")
                     line.trackingStatus:SetTextColor(0, 1, 0)
-                    line.updated:SetText(date("%Y-%m-%d %H:%M:%S", EposRT.GuildRoster.Database[player.name].timestamp))
+                    line.updated:SetText(date("%d.%m - %H:%M Uhr", EposRT.GuildRoster.Database[player.name].timestamp))
 
                 end
             end

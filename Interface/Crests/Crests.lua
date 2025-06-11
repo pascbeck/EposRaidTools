@@ -88,27 +88,27 @@ function BuildCrestsInterface(parent)
 
     -- Column: Available
     header.crestsAvailable = DF:CreateLabel(header, "Available")
-    header.crestsAvailable:SetPoint("LEFT", header, "LEFT", 185, 0)
+    header.crestsAvailable:SetPoint("LEFT", header, "LEFT", 175, 0)
     header.crestsAvailable:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
     -- Column: Obtainable
     header.crestsObtainable = DF:CreateLabel(header, "Obtainable")
-    header.crestsObtainable:SetPoint("LEFT", header, "LEFT", 300, 0)
+    header.crestsObtainable:SetPoint("LEFT", header, "LEFT", 280, 0)
     header.crestsObtainable:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
     -- Column: Used
     header.crestsUsed = DF:CreateLabel(header, "Used")
-    header.crestsUsed:SetPoint("LEFT", header, "LEFT", 425, 0)
+    header.crestsUsed:SetPoint("LEFT", header, "LEFT", 405, 0)
     header.crestsUsed:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
     -- Column: Total Earned
     header.crestsTotalEarned = DF:CreateLabel(header, "Total Earned")
-    header.crestsTotalEarned:SetPoint("LEFT", header, "LEFT", 525, 0)
+    header.crestsTotalEarned:SetPoint("LEFT", header, "LEFT", 505, 0)
     header.crestsTotalEarned:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
     -- Column: Updated
     header.updatedLabel = DF:CreateLabel(header, "Updated")
-    header.updatedLabel:SetPoint("LEFT", header, "LEFT", 650, 0)
+    header.updatedLabel:SetPoint("LEFT", header, "LEFT", 630, 0)
     header.updatedLabel:SetTextColor(C.colors.headerColorR, C.colors.headerColorG, C.colors.headerColorB)
 
     local function PrepareData()
@@ -127,7 +127,7 @@ function BuildCrestsInterface(parent)
                     local obtainable = currency.canEarnPerWeek and (currency.maxQuantity - currency.totalEarned) or "Infinite"
                     local used = (currency.totalEarned or 0) - available
                     local totalEarned = currency.totalEarned or 0
-                    local tsText = playerDatabaseEntry.timestamp and date("%Y-%m-%d", playerDatabaseEntry.timestamp) or "-"
+                    local tsText = playerDatabaseEntry.timestamp and date("%d.%m - %H:%M Uhr", playerDatabaseEntry.timestamp) or "-"
 
                     -- only returns tracked players and non blacklisted players
                     if EposRT.GuildRoster.Tracked[player.rank] and not EposRT.GuildRoster.Blacklist[player.name] then
@@ -195,23 +195,23 @@ function BuildCrestsInterface(parent)
 
         -- Available
         line.crestsAvailable = DF:CreateLabel(line, "")
-        line.crestsAvailable:SetPoint("LEFT", line, "LEFT", 185, 0)
+        line.crestsAvailable:SetPoint("LEFT", line, "LEFT", 175, 0)
 
         -- Obtainable
         line.crestsObtainable = DF:CreateLabel(line, "")
-        line.crestsObtainable:SetPoint("LEFT", line, "LEFT", 300, 0)
+        line.crestsObtainable:SetPoint("LEFT", line, "LEFT", 280, 0)
 
         -- Used
         line.crestsUsed = DF:CreateLabel(line, "")
-        line.crestsUsed:SetPoint("LEFT", line, "LEFT", 425, 0)
+        line.crestsUsed:SetPoint("LEFT", line, "LEFT", 405, 0)
 
         -- Total Earned
         line.crestsTotalEarned = DF:CreateLabel(line, "")
-        line.crestsTotalEarned:SetPoint("LEFT", line, "LEFT", 525, 0)
+        line.crestsTotalEarned:SetPoint("LEFT", line, "LEFT", 505, 0)
 
         -- Updated timestamp
         line.updated = DF:CreateLabel(line, "")
-        line.updated:SetPoint("LEFT", line, "LEFT", 650, 0)
+        line.updated:SetPoint("LEFT", line, "LEFT", 630, 0)
 
         return line
     end

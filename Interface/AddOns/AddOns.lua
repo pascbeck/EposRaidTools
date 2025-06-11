@@ -110,7 +110,7 @@ function BuildAddOnsInterface(parent)
         for _, player in pairs(EposRT.GuildRoster.Players) do
             local playerDatabaseEntry = EposRT.GuildRoster.Database[player.name]
             if playerDatabaseEntry and next(EposRT.AddOns.Fetch) then
-                local timestamp = playerDatabaseEntry.timestamp and date("%Y-%m-%d %H:%M", playerDatabaseEntry.timestamp) or "-"
+                local timestamp = playerDatabaseEntry.timestamp and date("%d.%m - %H:%M Uhr", playerDatabaseEntry.timestamp) or "-"
                 local addons = playerDatabaseEntry.addons
                 local current = EposRT.AddOns and EposRT.AddOns.Current
                 local addon = addons[current]
@@ -120,9 +120,9 @@ function BuildAddOnsInterface(parent)
                         name = player.name,
                         class = player.class,
                         rank = player.rank,
-                        installed = addon and "True" or "False",
-                        version = addon and (addon.version or "-") or "-",
-                        loaded = addon and (addon.loaded and "True" or "False") or "False",
+                        installed = addon and addon.installed or false,
+                        version = addon and addon.version or "-",
+                        loaded = addon and addon.loaded or false,
                         ts = timestamp,
                     })
                 end
@@ -149,12 +149,11 @@ function BuildAddOnsInterface(parent)
                 line.name:SetTextColor(Epos:GetClassColorForPlayer(player.name))
 
                 -- Installed
-                line.installed:SetText(player.installed)
-
-                -- Installed color
-                if player.installed == "True" then
+                if player.installed == true then
+                    line.installed:SetText("Installed")
                     line.installed:SetTextColor(0, 1, 0)
                 else
+                    line.installed:SetText("Not Installed")
                     line.installed:SetTextColor(1, 0, 0)
                 end
 
@@ -162,12 +161,11 @@ function BuildAddOnsInterface(parent)
                 line.version:SetText(player.version)
 
                 -- Loaded
-                line.loaded:SetText(player.loaded)
-
-                -- Loaded color
-                if player.loaded == "True" then
+                if player.loaded == true then
+                    line.loaded:SetText("Loaded")
                     line.loaded:SetTextColor(0, 1, 0)
                 else
+                    line.loaded:SetText("Not Loaded")
                     line.loaded:SetTextColor(1, 0, 0)
                 end
 
@@ -194,6 +192,7 @@ function BuildAddOnsInterface(parent)
         -- Version
         line.version = DF:CreateLabel(line, "")
         line.version:SetPoint("LEFT", line, "LEFT", 300, 0)
+        line.version:SetWidth(90)
 
         -- Loaded
         line.loaded = DF:CreateLabel(line, "")

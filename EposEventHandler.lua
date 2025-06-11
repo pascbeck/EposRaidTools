@@ -119,7 +119,12 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
 
             -- received data
         elseif payload.event == "EPOS_DATA" then
-            DevTools_Dump(payload.data)
+            print(sender)
+            if sender == "Cutesypoo-Eredar" then
+                print("is from my gurl")
+                DevTools_Dump(payload)
+            end
+
             EposRT.GuildRoster.Database[payload.data.name] = payload.data
 
             EposUI.DatabaseTab:MasterRefresh()
