@@ -93,7 +93,9 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
             -- AddOns
             EposRT.AddOns.Fetch = EposRT.AddOns.Fetch or {
                 "MRT",
-                "EposRaidTools"
+                "NorthernSkyRaidTools",
+                "Details",
+                "EposRaidTools",
             }
             EposRT.AddOns.Current = EposRT.AddOns.Current or "MRT"
 
