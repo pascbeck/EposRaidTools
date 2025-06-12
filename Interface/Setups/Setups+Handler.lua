@@ -214,6 +214,7 @@ function Epos:ProcessRoster ()
     end
 
     s.needGroup = nil
+    Epos.EventFrame:UnregisterEvent('GROUP_ROSTER_UPDATE')
 
     if EposRT.Settings.AnnounceBenchedPlayers then
         local index = EposRT.Setups.Current.Boss:match("^(%d+)")
@@ -238,5 +239,4 @@ function Epos:ProcessRoster ()
     end
 
     Epos:Msg("Applied Setup for " .. EposRT.Setups.Current.Boss)
-    Epos.EventFrame:UnregisterEvent('GROUP_ROSTER_UPDATE')
 end

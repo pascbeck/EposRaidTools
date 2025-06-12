@@ -127,6 +127,13 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
 
 
     elseif eventName == "GROUP_ROSTER_UPDATE" and isWoWEvent then
+        if self.timer then
+            self.timer:Cancel()
+        end
+        self.timer = C_Timer.NewTimer(0.5,function()
+            self.timer = nil
+            Epos:ProcessRoster()
+        end)
 
     elseif eventName == "EPOS_MSG" and isInternal then
         local payload, sender = ...
