@@ -41,13 +41,15 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
             EposRT.Settings = EposRT.Settings or {}
 
             -- Settings
+            EposRT.Settings.Minimap = EposRT.Settings.Minimap or { hide = false }
             EposRT.Settings.Transparency = EposRT.Settings.Transparency or false
             EposRT.Settings.HideStatusBar = EposRT.Settings.HideStatusBar or false
             EposRT.Settings.AnnouncementChannel = EposRT.Settings.AnnouncementChannel or "WHISPER"
-            EposRT.Settings.AnnounceBenchedPlayers = EposRT.Settings.AnnounceBenchedPlayers or true
+            EposRT.Settings.AnnounceBenchedPlayers = EposRT.Settings.AnnounceBenchedPlayers == nil and true or EposRT.Settings.AnnounceBenchedPlayers
             EposRT.Settings.EnableEventLogging = EposRT.Settings.EnableEventLogging or false
-            EposRT.Settings.EnableDataRequestOnLoginEvent = EposRT.Settings.EnableDataRequestOnLoginEvent or true
-            EposRT.Settings.EnableDataReceiveLogging = EposRT.Settings.EnableDataReceiveLogging or true
+            EposRT.Settings.EnableDataRequestOnLoginEvent = EposRT.Settings.EnableDataRequestOnLoginEvent == nil and true or EposRT.Settings.EnableDataRequestOnLoginEvent
+            EposRT.Settings.EnableDataReceiveLogging = EposRT.Settings.EnableDataReceiveLogging == nil and true or EposRT.Settings.EnableDataReceiveLogging
+            EposRT.Settings.EnableDataRequestLogging = EposRT.Settings.EnableDataRequestLogging == nil and true or EposRT.Settings.EnableDataRequestLogging
             EposRT.Settings.Debug = EposRT.Settings.Debug or false
 
             -- GuildRoster
@@ -125,10 +127,27 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
 
         -- ask data on player login
         if payload.event == "PLAYER_ENTERING_WORLD" then
-            Epos:RequestData("EPOS_REQUEST", "WHISPER", sender)
+            if EposRT.Settings.EnableDataRequestOnLoginEvent then
+                local playerName = payload.data.name
+                local classColor = Epos:GetClassColorForPlayer(playerName)
+                Epos:RequestData("EPOS_REQUEST", "WHISPER", sender, true)
+
+                if EposRT.Settings.EnableDataRequestLogging then
+                    Epos:Msg(string.format("Sending Data Request to |cff%02x%02x%02x%s|r",
+                            classColor.r * 255, classColor.g * 255, classColor.b * 255, playerName))
+                end
+            end
+
 
             -- received data
         elseif payload.event == "EPOS_DATA" then
+            if EposRT.Settings.EnableDataReceiveLogging then
+                local playerName = payload.data.name
+                local classColor = Epos:GetClassColorForPlayer(playerName)
+
+                Epos:Msg(string.format("Received Data from |cff%02x%02x%02x%s|r",
+                        classColor.r * 255, classColor.g * 255, classColor.b * 255, playerName))
+            end
             EposRT.GuildRoster.Database[payload.data.name] = payload.data
 
             EposUI.DatabaseTab:MasterRefresh()

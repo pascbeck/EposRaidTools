@@ -93,7 +93,9 @@ function Epos:FetchGuild()
     end
 end
 
-function Epos:RequestData(event, channel, sender)
+function Epos:RequestData(event, channel, sender, skip)
+    skip = skip or false
+
     Epos:Broadcast(event, {
         event = event,
         data = {
@@ -102,6 +104,10 @@ function Epos:RequestData(event, channel, sender)
             addons = EposRT.AddOns.Fetch
         }
     }, "ALERT", channel, sender)
+
+    if not skip and EposRT.Settings.EnableDataRequestLogging then
+        Epos:Msg("Sending Data Request to GUILD")
+    end
 end
 
 function Epos:Msg(msg)

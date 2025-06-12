@@ -20,7 +20,7 @@ local EposUI = DF:CreateSimplePanel(
         UIParent,
         C.window_width,
         C.window_height,
-        "|cFF78A8FFEpos|r Raid Tools",
+        "Epos Raid Tools",
         "EposUI",
         PANEL_OPTIONS
 )
@@ -56,7 +56,7 @@ function EposUI:Init()
 
     local tabContainer = DF:CreateTabContainer(
             self,
-            "Epos",
+            "|cFF78A8FFEpos|r",
             "EposUI_Tab",
             TAB_LAYOUT,
             CONTAINER_OPTIONS
@@ -93,66 +93,72 @@ function EposUI:Init()
     end
 
     -- Table of option descriptors passed to BuildMenu on the Settings tab
+    -- Table of option descriptors passed to BuildMenu on the Settings tab
     local settingsOptions = {
         {
             type = "label",
             get = function()
-                return "General Options"
+                return "General Settings"
             end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = "Disable Minimap Button",
-            desc = "Hide the minimap button.",
-            get = function() return EposRT.Settings.Minimap.hide end,
+            name = "Hide Minimap Button",
+            desc = "Enable this to hide the minimap button for the addon.",
+            get = function() return EposRT.Settings["Minimap"].hide end,
             set = function(_, _, value)
-                EposRT.Settings.Minimap.hide = value
+                EposRT.Settings["Minimap"].hide = value
                 if LDBIcon then
-                    LDBIcon:Refresh("EposRT", EposRT.Settings.Minimap)
+                    LDBIcon:Refresh("EposRT", EposRT.Settings["Minimap"])
                 end
             end,
         },
-
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Data Receive in Chat",
-            desc = "Prints sender on data receive",
-            get = function() return EposRT.Settings.EnableDataReceiveLogging end,
-            set = function(_, _, value) EposRT.Settings.EnableDataReceiveLogging = value end,
-            nocombat = true,
+            name = "Log Data Requests in Chat",
+            desc = "Prints a message to the chat when a data request is made.",
+            get = function() return EposRT.Settings["EnableDataRequestLogging"] end,
+            set = function(_, _, value) EposRT.Settings["EnableDataRequestLogging"] = value end,
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = "Enable Data Request on Player Login",
-            desc = "Sends data request to the player who recently logged in",
-            get = function() return EposRT.Settings.EnableDataRequestOnLoginEvent end,
-            set = function(_, _, value) EposRT.EnableDataRequestOnLoginEvent = value end,
-            nocombat = true,
+            name = "Log Data Receives in Chat",
+            desc = "Prints a message to the chat when data is received.",
+            get = function() return EposRT.Settings["EnableDataReceiveLogging"] end,
+            set = function(_, _, value) EposRT.Settings["EnableDataReceiveLogging"] = value end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Request Data on Player Login",
+            desc = "Automatically sends a data request when a player logs in.",
+            get = function() return EposRT.Settings["EnableDataRequestOnLoginEvent"] end,
+            set = function(_, _, value) EposRT.Settings["EnableDataRequestOnLoginEvent"] = value end,
         },
         {
             type = "toggle",
             boxfirst = true,
             name = "Enable Event Logging",
-            desc = "Enable logging of important raid events for future reference.",
-            get = function() return EposRT.Settings.EnableEventLogging or false end,
+            desc = "Logs important raid events for later review or troubleshooting.",
+            get = function() return EposRT.Settings.EnableEventLogging end,
             set = function(_, _, value) EposRT.Settings.EnableEventLogging = value end,
         },
         {
             type = "toggle",
             boxfirst = true,
             name = "Enable Debug Mode",
-            desc = "Enables Debug Mode",
-            get = function() return EposRT.Settings.Debug or false end,
+            desc = "Activate Debug Mode to log detailed information about the addon’s operation.",
+            get = function() return EposRT.Settings.Debug end,
             set = function(_, _, value) EposRT.Settings.Debug = value end,
         },
         {
             type = "execute",
-            name = "Clear Database",
-            desc = "Erase all saved settings and reload the UI.",
+            name = "Clear All Settings",
+            desc = "Resets all saved settings to their default values and reloads the UI.",
             icontexture = [[Interface\GLUES\LOGIN\Glues-CheckBox-Check]],
             func = function()
                 wipe(EposRT)
@@ -171,7 +177,7 @@ function EposUI:Init()
             type = "toggle",
             boxfirst = true,
             name = "Announce Benched Players",
-            desc = "Announces benched players for current setup when applying roster (whisper)",
+            desc = "Announces players who are benched in the current setup when applying the roster (via channel below).",
             get = function()
                 return EposRT.Settings.AnnounceBenchedPlayers
             end,
@@ -183,8 +189,8 @@ function EposUI:Init()
             type = "select",
             get = function() return EposRT.Settings.AnnouncementChannel end,
             values = buildChannelMenu,
-            name = "Channel",
-            desc = "Select the channel for announcing benched players.",
+            name = "Announcement Channel",
+            desc = "Choose the channel for announcing benched players (e.g., Whisper, Say, etc.).",
             set = function(_, _, value)
                 EposRT.Settings.AnnouncementChannel = value
             end,
@@ -203,7 +209,7 @@ function EposUI:Init()
             get = function() return EposRT.Settings.FrameStrata or "HIGH" end,
             values = buildStrataMenu,
             name = "Frame Strata",
-            desc = "Choose the frame strata for Epos Raid Tools. Higher strata will place the UI above more UI elements.",
+            desc = "Adjust the frame strata (z-order) for Epos Raid Tools. Higher strata will place the UI above other UI elements.",
             set = function(_, _, value)
                 EposRT.Settings.FrameStrata = value
                 EposUI:SetFrameStrata(value) -- Set the frame strata dynamically
@@ -214,7 +220,7 @@ function EposUI:Init()
             type = "toggle",
             boxfirst = true,
             name = "Enable Transparency",
-            desc = "Enable or disable the transparency of the UI window.",
+            desc = "Enable or disable the transparency effect for the UI window.",
             get = function()
                 return EposRT.Settings.Transparency
             end,
@@ -231,7 +237,7 @@ function EposUI:Init()
             type = "toggle",
             boxfirst = true,
             name = "Hide Status Bar",
-            desc = "Hide or show the status bar.",
+            desc = "Enable this to hide the status bar at the bottom of the UI.",
             get = function()
                 return EposRT.Settings.HideStatusBar
             end,
@@ -245,6 +251,7 @@ function EposUI:Init()
             end,
         }
     }
+
 
     -- Build Empty/AddOn & Setup Menus
     local menuX = 10
