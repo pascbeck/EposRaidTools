@@ -31,14 +31,14 @@ function BuildAddOnsInterface(parent)
     requestDataButton.tooltip = "Sends data request to current selected players"
 
     requestDataButton:SetIcon(
-            [[Interface\GLUES\CharacterSelect\RestoreButton]],  -- Texture path
-            24,                                      -- Icon width
-            24,                                      -- Icon height
-            nil,                                     -- Layout (leave as nil for default)
-            nil,                                     -- Texcoord (optional, can leave as nil for default)
-            nil,                                     -- Overlay (optional, can leave as nil)
-            nil,                                     -- Text distance (optional)
-            4,                                     -- Left padding (optional)
+            [[Interface\GLUES\CharacterSelect\RestoreButton]], -- Texture path
+            24, -- Icon width
+            24, -- Icon height
+            nil, -- Layout (leave as nil for default)
+            nil, -- Texcoord (optional, can leave as nil for default)
+            nil, -- Overlay (optional, can leave as nil)
+            nil, -- Text distance (optional)
+            4, -- Left padding (optional)
             nil                                      -- Short method (optional)
     )
 
@@ -73,7 +73,7 @@ function BuildAddOnsInterface(parent)
                 label = name,
                 value = addon,
                 icon = icon,
-                iconsize = {20, 20},
+                iconsize = { 20, 20 },
                 onclick = function(_, _, value)
                     EposRT.AddOns.Current = value
                     EposUI.AddOnsTab:MasterRefresh()
@@ -129,8 +129,6 @@ function BuildAddOnsInterface(parent)
                 local addons = playerDatabaseEntry.addons
                 local current = EposRT.AddOns and EposRT.AddOns.Current
                 local addon = addons[current]
-
-
 
                 if EposRT.GuildRoster.Tracked[player.rank] and not EposRT.GuildRoster.Blacklist[player.name] then
                     table_insert(data, {

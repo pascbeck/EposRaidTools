@@ -133,7 +133,9 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
 
         -- ask data on player login
         if payload.event == "PLAYER_ENTERING_WORLD" then
-            if not EposRT.GuildRoster.Players[payload.data.name] then return end
+            if not EposRT.GuildRoster.Players[payload.data.name] then
+                return
+            end
             if EposRT.Settings.EnableDataRequestOnLoginEvent then
                 local playerName = payload.data.name
                 local classColor = Epos:GetClassColorForPlayer(playerName)
@@ -152,7 +154,9 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
                 local playerName = payload.data.name
                 local classColor = Epos:GetClassColorForPlayer(playerName)
 
-                if not EposRT.GuildRoster.Players[playerName] then return end
+                if not EposRT.GuildRoster.Players[playerName] then
+                    return
+                end
 
                 Epos:Msg(string.format("Received Data from |cff%02x%02x%02x%s|r",
                         classColor.r * 255, classColor.g * 255, classColor.b * 255, playerName))

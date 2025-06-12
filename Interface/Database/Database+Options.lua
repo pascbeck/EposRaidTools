@@ -5,21 +5,21 @@ local _, Epos = ...
 -- Cached Globals
 local DF = _G.DetailsFramework
 local UIParent = _G.UIParent
-local CreateFrame  = _G.CreateFrame
+local CreateFrame = _G.CreateFrame
 local table_insert = table.insert
-local table_sort   = table.sort
-local strfind      = _G.strfind
+local table_sort = table.sort
+local strfind = _G.strfind
 local GetRealmName = _G.GetRealmName
 
 local C = Epos.Constants
 
 -- Local Constants
-local PANEL_WIDTH   = 485
-local PANEL_HEIGHT  = 400
-local SCROLL_WIDTH  = PANEL_WIDTH - 40
+local PANEL_WIDTH = 485
+local PANEL_HEIGHT = 400
+local SCROLL_WIDTH = PANEL_WIDTH - 40
 local SCROLL_HEIGHT = 300
-local ROW_HEIGHT    = C.tabs.lineHeight
-local VISIBLE_ROWS  = 15
+local ROW_HEIGHT = C.tabs.lineHeight
+local VISIBLE_ROWS = 15
 
 function BuildDatabaseInterfaceOptions()
 
@@ -36,20 +36,24 @@ function BuildDatabaseInterfaceOptions()
 
     local options = {}
     options[#options + 1] = {
-        type          = "label",
-        get           = function() return "Track Guild Ranks" end,
+        type = "label",
+        get = function()
+            return "Track Guild Ranks"
+        end,
         text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
     }
 
     -- Toggles for each rank
     for _, rankName in pairs(C.guildRanks) do
         options[#options + 1] = {
-            type     = "toggle",
+            type = "toggle",
             boxfirst = true,
-            name     = rankName,
-            desc     = "Enable or disable tracking for " .. rankName,
-            get      = function() return EposRT.GuildRoster.Tracked[rankName] end,
-            set      = function(_, _, value)
+            name = rankName,
+            desc = "Enable or disable tracking for " .. rankName,
+            get = function()
+                return EposRT.GuildRoster.Tracked[rankName]
+            end,
+            set = function(_, _, value)
                 EposRT.GuildRoster.Tracked[rankName] = value
                 Epos:Msg((value and "Enabled " or "Disabled ") .. "'" .. rankName .. "'" .. " rank for data requests")
                 -- refresh
@@ -64,8 +68,10 @@ function BuildDatabaseInterfaceOptions()
 
     options[#options + 1] = { type = "break" }
     options[#options + 1] = {
-        type          = "label",
-        get           = function() return "Blacklist & Whitelist" end,
+        type = "label",
+        get = function()
+            return "Blacklist & Whitelist"
+        end,
         text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
     }
 
@@ -141,7 +147,7 @@ function BuildDatabaseInterfaceOptionsBlacklist()
     end
 
     local function CreateLine (self, index)
-        local line = CreateFrame("Frame", "$parentLine"..index, self, "BackdropTemplate")
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * ROW_HEIGHT) - 1)
         line:SetSize(self:GetWidth() - 2, ROW_HEIGHT)
         DF:ApplyStandardBackdrop(line)
@@ -155,7 +161,9 @@ function BuildDatabaseInterfaceOptionsBlacklist()
                 line,
                 function()
                     local name = line.id
-                    if not name then return end
+                    if not name then
+                        return
+                    end
 
                     Epos:DeleteBlacklistEntry(name, options_frame)
                 end,
@@ -212,7 +220,8 @@ function BuildDatabaseInterfaceOptionsBlacklist()
     local new_label = DF:CreateLabel(options_frame, "New Player:", 11)
     new_label:SetPoint("TOPLEFT", scrollBox, "BOTTOMLEFT", 0, -20)
 
-    local new_entry = DF:CreateTextEntry(options_frame, function() end, 120, 20)
+    local new_entry = DF:CreateTextEntry(options_frame, function()
+    end, 120, 20)
     new_entry:SetPoint("LEFT", new_label, "RIGHT", 10, 0)
     new_entry:SetTemplate(C.templates.dropdown)
 
@@ -220,7 +229,9 @@ function BuildDatabaseInterfaceOptionsBlacklist()
             options_frame,
             function()
                 local input = new_entry:GetText():trim()
-                if input == "" then return end
+                if input == "" then
+                    return
+                end
                 Epos:AddBlacklistEntry(input, options_frame)
                 new_entry:SetText("")
             end,
@@ -246,7 +257,9 @@ function Epos:AddBlacklistEntry(name, parent)
     end
 
     local guildEntry = EposRT.GuildRoster.Players[name]
-    if not guildEntry then return end
+    if not guildEntry then
+        return
+    end
 
     EposRT.GuildRoster.Blacklist[name] = true
 
@@ -263,7 +276,9 @@ end
 
 function Epos:DeleteBlacklistEntry(name, parent)
     local guildEntry = EposRT.GuildRoster.Players[name]
-    if not guildEntry then return end
+    if not guildEntry then
+        return
+    end
 
     -- Get the player's class color
     local classColor = RAID_CLASS_COLORS[guildEntry.class] or { r = 1, g = 1, b = 1 } -- default to white if no class is found

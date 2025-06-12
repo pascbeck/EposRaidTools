@@ -95,7 +95,6 @@ function BuildSetupsInterfaceOptions()
                 if entry then
                     local line = self:GetLine(i)
 
-
                     if entry and entry.icon then
                         line.iconTexture:SetTexture(entry.icon)  -- <- numeric icon ID
                         line.iconTexture:Show()
@@ -111,7 +110,7 @@ function BuildSetupsInterfaceOptions()
     end
 
     local function createLineFunc(self, index)
-        local line = CreateFrame("Frame", "$parentLine"..index, self, "BackdropTemplate")
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint(
                 "TOPLEFT",
                 self,
@@ -138,7 +137,9 @@ function BuildSetupsInterfaceOptions()
                 line,
                 function()
                     local id = line.nameLabel.text
-                    if not id then return end
+                    if not id then
+                        return
+                    end
 
                     Epos:DeleteSetup(id, setup_options_frame)
                 end,
@@ -215,7 +216,7 @@ function Epos:ImportSetups(parent)
     DF:ReskinSlider(popup.editBox.scroll)
     popup.editBox:SetFocus()
 
-    popup.confirmBtn = DF:CreateButton(popup, nil, 280, 20, "Import", nil,nil,nil,nil,nil,nil, C.templates.button)
+    popup.confirmBtn = DF:CreateButton(popup, nil, 280, 20, "Import", nil, nil, nil, nil, nil, nil, C.templates.button)
     popup.confirmBtn:SetPoint("BOTTOM", 0, 10)
 
     popup.confirmBtn:SetScript("OnClick", function()
@@ -257,7 +258,6 @@ function Epos:DeleteSetup (boss, parent)
         dropdown:Refresh()
         dropdown:Select(_boss)
     end
-
 
     EposUI.SetupsTab:MasterRefresh()
     parent.scrollbox:MasterRefresh()

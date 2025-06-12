@@ -76,7 +76,7 @@ function BuildAddOnsInterfaceOptions()
     end
 
     local function CreateLine (self, index)
-        local line = CreateFrame("Frame", "$parentLine"..index, self, "BackdropTemplate")
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * ROW_HEIGHT) - 1)
         line:SetSize(self:GetWidth() - 2, ROW_HEIGHT)
         DF:ApplyStandardBackdrop(line)
@@ -96,7 +96,9 @@ function BuildAddOnsInterfaceOptions()
                 line,
                 function()
                     local addon = line.id
-                    if not addon then return end
+                    if not addon then
+                        return
+                    end
 
                     Epos:DeleteAddOn(addon, options_frame)
                 end,
@@ -153,7 +155,8 @@ function BuildAddOnsInterfaceOptions()
     local new_label = DF:CreateLabel(options_frame, "New AddOn:", 11)
     new_label:SetPoint("TOPLEFT", scrollBox, "BOTTOMLEFT", 0, -20)
 
-    local new_entry = DF:CreateTextEntry(options_frame, function() end, 120, 20)
+    local new_entry = DF:CreateTextEntry(options_frame, function()
+    end, 120, 20)
     new_entry:SetPoint("LEFT", new_label, "RIGHT", 10, 0)
     new_entry:SetTemplate(C.templates.dropdown)
 
@@ -161,7 +164,9 @@ function BuildAddOnsInterfaceOptions()
             options_frame,
             function()
                 local input = new_entry:GetText():trim()
-                if input == "" then return end
+                if input == "" then
+                    return
+                end
                 Epos:AddAddOn(input, options_frame)
                 new_entry:SetText("")
             end,
@@ -169,7 +174,7 @@ function BuildAddOnsInterfaceOptions()
             20,
             "Add",
             nil, nil, nil,
-            nil,nil,nil,
+            nil, nil, nil,
             C.templates.button
     )
     add_button:SetPoint("LEFT", new_entry, "RIGHT", 10, 0)
@@ -182,12 +187,16 @@ end
 function Epos:AddAddOn (input, parent)
     -- Avoid duplicates
     for _, existing in pairs(EposRT.AddOns.Fetch) do
-        if existing == input then return end
+        if existing == input then
+            return
+        end
     end
 
     -- Validate that this AddOn folder actually exists (via metadata Title)
     local title = C_AddOns.GetAddOnMetadata(input, "Title")
-    if not title then return end
+    if not title then
+        return
+    end
 
     table_insert(EposRT.AddOns.Fetch, input)
     EposRT.AddOns.Current = input
@@ -214,7 +223,6 @@ function Epos:DeleteAddOn (addon, parent)
     if addon == EposRT.AddOns.Current then
         EposRT.AddOns.Current = EposRT.AddOns.Fetch[1] or nil
     end
-
 
     local title = C_AddOns.GetAddOnMetadata(addon, "Title") or addon
     Epos:Msg("Removed " .. title .. " from addons")

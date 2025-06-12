@@ -76,7 +76,7 @@ function BuildCrestsInterfaceOptions()
     end
 
     local function CreateLine (self, index)
-        local line = CreateFrame("Frame", "$parentLine"..index, self, "BackdropTemplate")
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * ROW_HEIGHT) - 1)
         line:SetSize(self:GetWidth() - 2, ROW_HEIGHT)
         DF:ApplyStandardBackdrop(line)
@@ -96,7 +96,9 @@ function BuildCrestsInterfaceOptions()
                 line,
                 function()
                     local currency = line.id
-                    if not currency then return end
+                    if not currency then
+                        return
+                    end
 
                     Epos:DeleteCurrency(currency, options_frame, line)
                 end,
@@ -153,7 +155,8 @@ function BuildCrestsInterfaceOptions()
     local new_label = DF:CreateLabel(options_frame, "New Crest:", 11)
     new_label:SetPoint("TOPLEFT", scrollBox, "BOTTOMLEFT", 0, -20)
 
-    local new_entry = DF:CreateTextEntry(options_frame, function() end, 120, 20)
+    local new_entry = DF:CreateTextEntry(options_frame, function()
+    end, 120, 20)
     new_entry:SetPoint("LEFT", new_label, "RIGHT", 10, 0)
     new_entry:SetTemplate(C.templates.dropdown)
 
@@ -162,7 +165,9 @@ function BuildCrestsInterfaceOptions()
             function()
                 local text = new_entry:GetText():trim()
                 local id = tonumber(text)
-                if not id then return end
+                if not id then
+                    return
+                end
 
                 Epos:AddCurrency(id, options_frame)
                 new_entry:SetText("")
@@ -171,7 +176,7 @@ function BuildCrestsInterfaceOptions()
             20,
             "Add",
             nil, nil, nil,
-            nil,nil,nil,
+            nil, nil, nil,
             C.templates.button
     )
     add_button:SetPoint("LEFT", new_entry, "RIGHT", 10, 0)
@@ -184,11 +189,15 @@ end
 function Epos:AddCurrency (id, parent)
     -- Avoid duplicates
     for _, existing in pairs(EposRT.Crests.Fetch) do
-        if existing == id then return end
+        if existing == id then
+            return
+        end
     end
 
     local data = C_CurrencyInfo.GetCurrencyInfo(id)
-    if not data then return end
+    if not data then
+        return
+    end
 
     table_insert(EposRT.Crests.Fetch, id)
     EposRT.Crests.Current = id
@@ -213,7 +222,9 @@ function Epos:DeleteCurrency (currency, parent, line)
     end
 
     local data = C_CurrencyInfo.GetCurrencyInfo(currency)
-    if not data then return end
+    if not data then
+        return
+    end
 
     if currency == EposRT.Crests.Current then
         EposRT.Crests.Current = EposRT.Crests.Fetch[1] or nil

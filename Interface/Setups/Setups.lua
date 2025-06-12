@@ -32,17 +32,16 @@ function BuildSetupsInterface(parent)
     importRosterData.tooltip = "Import Setups from google sheet"
 
     importRosterData:SetIcon(
-            [[Interface\BUTTONS\UI-GuildButton-OfficerNote-Up]],  -- Texture path
-            18,                                      -- Icon width
-            18,                                      -- Icon height
-            nil,                                     -- Layout (leave as nil for default)
-            nil,                                     -- Texcoord (optional, can leave as nil for default)
-            nil,                                     -- Overlay (optional, can leave as nil)
-            9,                                     -- Text distance (optional)
-            7,                                     -- Left padding (optional)
+            [[Interface\BUTTONS\UI-GuildButton-OfficerNote-Up]], -- Texture path
+            18, -- Icon width
+            18, -- Icon height
+            nil, -- Layout (leave as nil for default)
+            nil, -- Texcoord (optional, can leave as nil for default)
+            nil, -- Overlay (optional, can leave as nil)
+            9, -- Text distance (optional)
+            7, -- Left padding (optional)
             nil                                      -- Short method (optional)
     )
-
 
     local function GetBossDropdownOptions()
         local opts = {}
@@ -63,7 +62,7 @@ function BuildSetupsInterface(parent)
                 label = boss,
                 value = { Boss = boss, Setup = setup },
                 icon = C.bossIcons[i],
-                iconsize = {20, 20},
+                iconsize = { 20, 20 },
                 onclick = function(_, _, val)
                     EposRT.Setups.Current = val
                     EposUI.SetupsTab:MasterRefresh()

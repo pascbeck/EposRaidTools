@@ -6,7 +6,7 @@ local _, Epos = ...
 local GetNumGuildMembers = _G.GetNumGuildMembers
 local GetGuildRosterInfo = _G.GetGuildRosterInfo
 local GetMaxLevelForLatestExpansion = _G.GetMaxLevelForLatestExpansion
-local RAID_CLASS_COLORS  = _G.RAID_CLASS_COLORS
+local RAID_CLASS_COLORS = _G.RAID_CLASS_COLORS
 
 -- LibDataBroker / LibDBIcon Integration
 local LibStub = _G.LibStub
@@ -65,10 +65,14 @@ function Epos:FetchGuild()
     table.wipe(EposRT.GuildRoster.Players)
 
     local maxLevel = GetMaxLevelForLatestExpansion()
-    if not maxLevel then return end
+    if not maxLevel then
+        return
+    end
 
     local totalMembers = GetNumGuildMembers()
-    if totalMembers <= 0 then return end
+    if totalMembers <= 0 then
+        return
+    end
 
     local allowedRanks = {
         ["Guildlead"] = true,

@@ -32,14 +32,14 @@ function BuildCrestsInterface(parent)
     requestDataButton.tooltip = "Sends data request to current selected players"
 
     requestDataButton:SetIcon(
-            [[Interface\GLUES\CharacterSelect\RestoreButton]],  -- Texture path
-            24,                                      -- Icon width
-            24,                                      -- Icon height
-            nil,                                     -- Layout (leave as nil for default)
-            nil,                                     -- Texcoord (optional, can leave as nil for default)
-            nil,                                     -- Overlay (optional, can leave as nil)
-            nil,                                     -- Text distance (optional)
-            4,                                     -- Left padding (optional)
+            [[Interface\GLUES\CharacterSelect\RestoreButton]], -- Texture path
+            24, -- Icon width
+            24, -- Icon height
+            nil, -- Layout (leave as nil for default)
+            nil, -- Texcoord (optional, can leave as nil for default)
+            nil, -- Overlay (optional, can leave as nil)
+            nil, -- Text distance (optional)
+            4, -- Left padding (optional)
             nil                                      -- Short method (optional)
     )
 
@@ -70,10 +70,10 @@ function BuildCrestsInterface(parent)
             local currency = C_CurrencyInfo.GetCurrencyInfo(id)
             local name = currency and currency.name or id
             table_insert(t, {
-                label   = name,
-                value   = id,
+                label = name,
+                value = id,
                 icon = currency.iconFileID,
-                iconsize = {20, 20},
+                iconsize = { 20, 20 },
                 onclick = function(_, _, value)
                     EposRT.Crests.Current = value
                     EposUI.CrestsTab:MasterRefresh()
@@ -134,7 +134,6 @@ function BuildCrestsInterface(parent)
                 local currencies = playerDatabaseEntry.currency
                 local current = EposRT.Crests.Current
                 local currency = currencies[current]
-
 
                 if currency then
                     local available = currency.quantity or 0

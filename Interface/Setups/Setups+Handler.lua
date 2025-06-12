@@ -20,16 +20,16 @@ function Epos:ApplyGroups (list)
     end
 
     local inCombatUnits
-    for i=1,40 do
-        local unit = "raid"..i
+    for i = 1, 40 do
+        local unit = "raid" .. i
         if UnitAffectingCombat(unit) then
-            inCombatUnits = (inCombatUnits and (inCombatUnits..",")) or ""
+            inCombatUnits = (inCombatUnits and (inCombatUnits .. ",")) or ""
             inCombatUnits = inCombatUnits .. UnitName(unit)
         end
     end
 
     if inCombatUnits then
-        Epos:Msg("|cffff0000"..ERROR_CAPS..".|r "..L.RaidGroupsPlayersInCombat..": "..inCombatUnits)
+        Epos:Msg("|cffff0000" .. ERROR_CAPS .. ".|r " .. L.RaidGroupsPlayersInCombat .. ": " .. inCombatUnits)
         return
     end
 
@@ -37,13 +37,13 @@ function Epos:ApplyGroups (list)
     local needPosInGroup = {}
     local lockedUnit = {}
 
-    local RLName,_,RLGroup = GetRaidRosterInfo(1)
+    local RLName, _, RLGroup = GetRaidRosterInfo(1)
     local isRLfound = false
 
-    for i=1,8 do
+    for i = 1, 8 do
         local pos = 1
-        for j=1,5 do
-            local name = list[(i-1)*5+j]
+        for j = 1, 5 do
+            local name = list[(i - 1) * 5 + j]
             if name == RLName then
                 needGroup[name] = i
                 needPosInGroup[name] = pos
@@ -52,8 +52,8 @@ function Epos:ApplyGroups (list)
                 break
             end
         end
-        for j=1,5 do
-            local name = list[(i-1)*5+j]
+        for j = 1, 5 do
+            local name = list[(i - 1) * 5 + j]
             if name and name ~= RLName and UnitName(name) then
                 needGroup[name] = i
                 needPosInGroup[name] = pos
@@ -75,14 +75,14 @@ function Epos:ProcessRoster ()
     local s = EposRT.Setups.AssignmentHandler
 
     local UnitsInCombat
-    for i=1,40 do
-        local unit = "raid"..i
+    for i = 1, 40 do
+        local unit = "raid" .. i
         if UnitAffectingCombat(unit) then
             UnitsInCombat = (UnitsInCombat or "") .. (UnitsInCombat and "," or "") .. UnitName(unit)
         end
     end
     if UnitsInCombat then
-        Epos:Msg("|cffff0000"..ERROR_CAPS..".|r "..L.RaidGroupsCombatStarted..": "..UnitsInCombat)
+        Epos:Msg("|cffff0000" .. ERROR_CAPS .. ".|r " .. L.RaidGroupsCombatStarted .. ": " .. UnitsInCombat)
 
         s.needGroup = nil
 
@@ -105,11 +105,13 @@ function Epos:ProcessRoster ()
     local groupSize = {}
 
     wipe(currentGroup)
-    for i=1,8 do groupSize[i] = 0 end
-    for i=1,GetNumGroupMembers() do
+    for i = 1, 8 do
+        groupSize[i] = 0
+    end
+    for i = 1, GetNumGroupMembers() do
         local name, rank, subgroup = GetRaidRosterInfo(i)
-        if not needGroup[name] and name:find("%-") and needGroup[strsplit("-",name)] then
-            name = strsplit("-",name)
+        if not needGroup[name] and name:find("%-") and needGroup[strsplit("-", name)] then
+            name = strsplit("-", name)
         end
         currentGroup[name] = subgroup
         nameToID[name] = i
@@ -119,15 +121,15 @@ function Epos:ProcessRoster ()
 
     if not s.groupsReady then
         local WaitForGroup = false
-        for unit,group in pairs(needGroup) do
+        for unit, group in pairs(needGroup) do
             if currentGroup[unit] and currentGroup[unit] ~= needGroup[unit] then
                 local currGroupUnit = currentGroup[unit]
                 local needGroupUnit = needGroup[unit]
-                if groupSize[ needGroupUnit ] < 5 then
-                    SetRaidSubgroup(nameToID[unit],needGroupUnit)
+                if groupSize[needGroupUnit] < 5 then
+                    SetRaidSubgroup(nameToID[unit], needGroupUnit)
 
-                    groupSize[ currGroupUnit ] = groupSize[ currGroupUnit ] - 1
-                    groupSize[ needGroupUnit ] = groupSize[ needGroupUnit ] + 1
+                    groupSize[currGroupUnit] = groupSize[currGroupUnit] - 1
+                    groupSize[needGroupUnit] = groupSize[needGroupUnit] + 1
 
                     WaitForGroup = true
                 end
@@ -139,12 +141,12 @@ function Epos:ProcessRoster ()
 
         local SetToSwap = {}
         local WaitForSwap = false
-        for unit,group in pairs(needGroup) do
+        for unit, group in pairs(needGroup) do
             if not SetToSwap[unit] and currentGroup[unit] and currentGroup[unit] ~= group then
                 local currGroupUnit = currentGroup[unit]
 
                 local unitToSwap
-                for unit2,group2 in pairs(currentGroup) do
+                for unit2, group2 in pairs(currentGroup) do
                     if not SetToSwap[unit2] and group2 == group and needGroup[unit2] ~= group2 then
                         unitToSwap = unit2
                         break
@@ -170,7 +172,7 @@ function Epos:ProcessRoster ()
     do
         local SetToSwap = {}
         local WaitForSwap = false
-        for unit,pos in pairs(needPosInGroup) do
+        for unit, pos in pairs(needPosInGroup) do
             if currentGroup[unit] == s.groupWithRL then
                 pos = pos + 1
             end
@@ -178,7 +180,7 @@ function Epos:ProcessRoster ()
                 local currGroupUnit = currentGroup[unit]
 
                 local unitToSwapBridge
-                for unit2,group2 in pairs(currentGroup) do
+                for unit2, group2 in pairs(currentGroup) do
                     if group2 ~= currentGroup[unit] and nameToID[unit2] ~= 1 and not SetToSwap[unit2] then
                         unitToSwapBridge = unit2
                         break
@@ -186,7 +188,7 @@ function Epos:ProcessRoster ()
                 end
 
                 local unitToSwap
-                for unit2,pos2 in pairs(currentPos) do
+                for unit2, pos2 in pairs(currentPos) do
                     if currentGroup[unit2] == currentGroup[unit] and pos2 == pos and nameToID[unit2] ~= 1 and not SetToSwap[unit2] then
                         unitToSwap = unit2
                         break

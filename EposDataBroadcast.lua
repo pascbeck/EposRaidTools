@@ -1,4 +1,3 @@
-
 local _, Epos = ...
 
 local AceComm = LibStub("AceComm-3.0")
@@ -17,29 +16,34 @@ function Epos:Broadcast(event, payload, distribution, channel, sender)
 
     -- Send the message via AceComm
     AceComm:SendCommMessage(
-            event,          -- The event name to send, e.g., "EPOS_DATA_REQ"
-            encoded,        -- The serialized, compressed payload
-            channel,        -- The channel to use (e.g., "WHISPER", "GUILD", etc.)
-            sender,         -- The specific sender if using "WHISPER", nil for general channels
+            event, -- The event name to send, e.g., "EPOS_DATA_REQ"
+            encoded, -- The serialized, compressed payload
+            channel, -- The channel to use (e.g., "WHISPER", "GUILD", etc.)
+            sender, -- The specific sender if using "WHISPER", nil for general channels
             distribution    -- The message priority (e.g., "ALERT", "BULK", etc.)
     )
 end
 
-
-
-
 AceComm:RegisterComm("EPOS_MSG", function(prefix, encoded, distribution, sender)
 
-    if not (LibDeflate and LibSerialize) then return end
+    if not (LibDeflate and LibSerialize) then
+        return
+    end
 
     local decoded = LibDeflate:DecodeForWoWAddonChannel(encoded)
-    if not decoded then return end
+    if not decoded then
+        return
+    end
 
     local decompressed = LibDeflate:DecompressDeflate(decoded)
-    if not decompressed then return end
+    if not decompressed then
+        return
+    end
 
     local success, payload = LibSerialize:Deserialize(decompressed)
-    if not success then return end
+    if not success then
+        return
+    end
 
     -- route the payload into your existing handler
     Epos:HandleEvent("EPOS_MSG", false, true, payload, sender)

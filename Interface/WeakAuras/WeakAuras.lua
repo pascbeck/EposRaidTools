@@ -31,14 +31,14 @@ function BuildWeakAurasInterface(parent)
     requestDataButton.tooltip = "Sends data request to current selected players"
 
     requestDataButton:SetIcon(
-            [[Interface\GLUES\CharacterSelect\RestoreButton]],  -- Texture path
-            24,                                      -- Icon width
-            24,                                      -- Icon height
-            nil,                                     -- Layout (leave as nil for default)
-            nil,                                     -- Texcoord (optional, can leave as nil for default)
-            nil,                                     -- Overlay (optional, can leave as nil)
-            nil,                                     -- Text distance (optional)
-            4,                                     -- Left padding (optional)
+            [[Interface\GLUES\CharacterSelect\RestoreButton]], -- Texture path
+            24, -- Icon width
+            24, -- Icon height
+            nil, -- Layout (leave as nil for default)
+            nil, -- Texcoord (optional, can leave as nil for default)
+            nil, -- Overlay (optional, can leave as nil)
+            nil, -- Text distance (optional)
+            4, -- Left padding (optional)
             nil                                      -- Short method (optional)
     )
 
@@ -70,7 +70,7 @@ function BuildWeakAurasInterface(parent)
                 label = name,
                 value = name,
                 icon = "Interface\\AddOns\\EposRaidTools\\Media\\logo_64.tga",
-                iconsize = {20, 20},
+                iconsize = { 20, 20 },
                 onclick = function(_, _, value)
                     EposRT.WeakAuras.Current = value
                     EposUI.WeakAurasTab:MasterRefresh()
