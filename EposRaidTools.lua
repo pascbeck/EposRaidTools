@@ -95,7 +95,6 @@ end
 
 function Epos:RequestData(event, channel, sender, skip)
     skip = skip or false
-
     Epos:Broadcast(event, {
         event = event,
         data = {
@@ -125,5 +124,26 @@ function Epos:GetClassColorForPlayer(name)
     return RAID_CLASS_COLORS[class or ""] or { r = 1, g = 1, b = 1 }
 end
 
+SLASH_EPOS1 = "/epos"
+SlashCmdList.EPOS = function(cmd)
+    cmd = (cmd or "")
+    if cmd:match("^delete%s+(.+)$") then
+        local playerName = cmd:match("^delete%s+(.+)$"):trim()
+        if playerName and EposRT.GuildRoster.Players[playerName] then
+            EposRT.GuildRoster.Players[playerName] = nil
+            EposRT.GuildRoster.Database[playerName] = nil
+            Epos:Msg(playerName .. " has been removed from the database.")
+        else
+            Epos:Msg(playerName .. " not found.")
+        end
+    elseif cmd:match("^dump%s+(.+)$") then
+        local playerName = cmd:match("^dump%s+(.+)$"):trim()
+        DevTools_Dump(EposRT.GuildRoster.Database[playerName])
+    else
+        Epos:Msg("|cff78A8FFusage:|r")
+        Epos:Msg("   |cff78A8FF/epos delete <player_name-realm>|r - Remove a player from the database.")
+        Epos:Msg("   |cff78A8FF/epos dump <player_name-realm>|r - Dump player data from the database.")
+    end
+end
 
 return Epos

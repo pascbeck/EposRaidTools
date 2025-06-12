@@ -14,26 +14,35 @@ local C = Epos.Constants
 
 -- @param parent frame (setups tab)
 function BuildSetupsInterface(parent)
-    local setupOptions = DF:CreateButton(
+    local importRosterData = DF:CreateButton(
             parent,
             function()
-                EposUI.SetupsTabOptions:Show()
+                Epos:ImportSetups(parent)
             end,
             C.tabs.buttonWidth,
             C.tabs.buttonHeight,
-            "Setup Options",
+            "Import Setup",
             nil, nil, nil,
             nil, nil, nil,
             C.templates.button
     )
 
-    setupOptions:SetPoint(
-            "TOPLEFT",
-            parent,
-            "TOPLEFT",
-            C.tabs.leftPadding,
-            C.tabs.startY
+    importRosterData:SetPoint("TOPRIGHT", parent, "TOPRIGHT", C.tabs.rightPadding, C.tabs.startY)
+    importRosterData:SetAlpha(1)
+    importRosterData.tooltip = "Import Setups from google sheet"
+
+    importRosterData:SetIcon(
+            [[Interface\BUTTONS\UI-GuildButton-OfficerNote-Up]],  -- Texture path
+            18,                                      -- Icon width
+            18,                                      -- Icon height
+            nil,                                     -- Layout (leave as nil for default)
+            nil,                                     -- Texcoord (optional, can leave as nil for default)
+            nil,                                     -- Overlay (optional, can leave as nil)
+            9,                                     -- Text distance (optional)
+            7,                                     -- Left padding (optional)
+            nil                                      -- Short method (optional)
     )
+
 
     local function GetBossDropdownOptions()
         local opts = {}
@@ -73,19 +82,18 @@ function BuildSetupsInterface(parent)
             220, 30)
 
     bossDropdown:SetTemplate("OPTIONS_DROPDOWN_TEMPLATE")
-    bossDropdown:SetPoint("LEFT", setupOptions, "RIGHT", 15, 0)
+    bossDropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", C.tabs.leftPadding, C.tabs.startY + 5)
     bossDropdown.tooltip = "Choose which boss roster to display"
 
     local applyRosterBtn = DF:CreateButton(
             parent,
             function()
-                local index = EposRT.Setups.Current.Boss:match("^(%d+)")
-                local _, _, _, _, link = EJ_GetEncounterInfoByIndex(index, 1296)
-                local displayText = "You are benched for: " .. link
-
-                for _, bench in pairs(EposRT.Setups.Current.Setup.benched) do
-                    SendChatMessage(displayText, "WHISPER", nil, "Bluupriest-Blackhand")  -- Replace with actual player names
+                if not EposRT.Setups.Current.Boss then
+                    Epos:Msg("Can't apply empty setup")
+                    return
                 end
+
+                Epos:ApplyGroups(EposRT.Setups.Current.Setup.benched)
             end,
             C.tabs.buttonWidth, C.tabs.buttonHeight,
             "Apply Roster",

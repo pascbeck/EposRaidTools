@@ -12,14 +12,6 @@ local strfind      = _G.strfind
 local GetRealmName = _G.GetRealmName
 
 local C = Epos.Constants
-local RANKS = {
-    "Guildlead",
-    "Officer",
-    "Officer Alt",
-    "Raider",
-    "Raid Alt",
-    "Trial",
-}
 
 -- Local Constants
 local PANEL_WIDTH   = 485
@@ -50,7 +42,7 @@ function BuildDatabaseInterfaceOptions()
     }
 
     -- Toggles for each rank
-    for _, rankName in pairs(RANKS) do
+    for _, rankName in pairs(C.guildRanks) do
         options[#options + 1] = {
             type     = "toggle",
             boxfirst = true,

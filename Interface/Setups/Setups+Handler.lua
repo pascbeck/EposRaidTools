@@ -14,7 +14,10 @@ function Epos:ApplyGroups (list)
     Epos:ResetSetupSavedVariables()
     Epos.EventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 
-    if not IsInRaid() then return end
+    if not IsInRaid() then
+        Epos:Msg("Cannot be used outside raid environment")
+        return
+    end
 
     local inCombatUnits
     for i=1,40 do
@@ -79,7 +82,8 @@ function Epos:ProcessRoster ()
         end
     end
     if UnitsInCombat then
-        print("|cffff0000"..ERROR_CAPS..".|r "..L.RaidGroupsCombatStarted..": "..UnitsInCombat)
+        Epos:Msg("|cffff0000"..ERROR_CAPS..".|r "..L.RaidGroupsCombatStarted..": "..UnitsInCombat)
+
         s.needGroup = nil
 
         Epos.EventFrame:UnregisterEvent('GROUP_ROSTER_UPDATE')
@@ -208,5 +212,29 @@ function Epos:ProcessRoster ()
     end
 
     s.needGroup = nil
+
+    if EposRT.Settings.AnnounceBenchedPlayers then
+        local index = EposRT.Setups.Current.Boss:match("^(%d+)")
+        local _, _, _, _, link = EJ_GetEncounterInfoByIndex(index, 1296)
+        local displayText
+
+        if EposRT.Settings.AnnouncementChannel == "WHISPER" then
+            displayText = "You are benched for: " .. link
+            for _, bench in pairs(EposRT.Setups.Current.Setup.benched) do
+                print(bench)
+                SendChatMessage(displayText, "WHISPER", nil, bench)
+            end
+        else
+            local benchNames = {}
+            for _, bench in pairs(EposRT.Setups.Current.Setup.benched) do
+                table.insert(benchNames, bench)
+            end
+            local benchList = table.concat(benchNames, ", ")
+            displayText = "The following players are benched for: " .. link .. " - " .. benchList
+            SendChatMessage(displayText, EposRT.Settings.AnnouncementChannel)
+        end
+    end
+
+    Epos:Msg("Applied Setup for " .. EposRT.Setups.Current.Boss)
     Epos.EventFrame:UnregisterEvent('GROUP_ROSTER_UPDATE')
 end

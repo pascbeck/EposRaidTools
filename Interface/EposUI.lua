@@ -73,20 +73,19 @@ function EposUI:Init()
     local settingsTab = tabContainer:GetTabFrameByName("Settings")
 
     local strataTable = {
-        {value = "BACKGROUND", label = "Background", onclick = onStrataSelect, icon = [[Interface\Buttons\UI-MicroStream-Green]], iconcolor = {0, .5, 0, .8}, texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
-        {value = "LOW", label = "Low", onclick = onStrataSelect, icon = [[Interface\Buttons\UI-MicroStream-Green]] , texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
-        {value = "MEDIUM", label = "Medium", onclick = onStrataSelect, icon = [[Interface\Buttons\UI-MicroStream-Yellow]] , texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
-        {value = "HIGH", label = "High", onclick = onStrataSelect, icon = [[Interface\Buttons\UI-MicroStream-Yellow]] , iconcolor = {1, .7, 0, 1}, texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
-        {value = "DIALOG", label = "Dialog", onclick = onStrataSelect, icon = [[Interface\Buttons\UI-MicroStream-Red]] , iconcolor = {1, 0, 0, 1},  texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
+        {value = "BACKGROUND", label = "Background", onclick = function() EposUI:SetFrameStrata("BACKGROUND") EposRT.Settings.FrameStrata = "BACKGROUND"  end, icon = [[Interface\Buttons\UI-MicroStream-Green]], iconcolor = {0, .5, 0, .8}, texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
+        {value = "LOW", label = "Low", onclick = function() EposUI:SetFrameStrata("LOW") EposRT.Settings.FrameStrata = "LOW"  end, icon = [[Interface\Buttons\UI-MicroStream-Green]] , texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
+        {value = "MEDIUM", label = "Medium", onclick = function() EposUI:SetFrameStrata("MEDIUM") EposRT.Settings.FrameStrata = "MEDIUM"  end, icon = [[Interface\Buttons\UI-MicroStream-Yellow]] , texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
+        {value = "HIGH", label = "High", onclick = function() EposUI:SetFrameStrata("HIGH") EposRT.Settings.FrameStrata = "HIGH"  end, icon = [[Interface\Buttons\UI-MicroStream-Yellow]] , iconcolor = {1, .7, 0, 1}, texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
+        {value = "DIALOG", label = "Dialog", onclick = function() EposUI:SetFrameStrata("DIALOG") EposRT.Settings.FrameStrata = "DIALOG"  end, icon = [[Interface\Buttons\UI-MicroStream-Red]] , iconcolor = {1, 0, 0, 1},  texcoord = nil}, --Interface\Buttons\UI-MicroStream-Green UI-MicroStream-Red UI-MicroStream-Yellow
     }
     local buildStrataMenu = function() return strataTable end
 
     local channel_list = {
-        {value = "PRINT", icon = [[Interface\LFGFRAME\BattlenetWorking2]], iconsize = {14, 14}, iconcolor = {1, 1, 1, 1}, texcoord = {12/64, 53/64, 11/64, 53/64}, label = "Print", onclick},
-        {value = "SAY", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconsize = {14, 14}, texcoord = {0.0390625, 0.203125, 0.09375, 0.375}, label = "Say"},
-        {value = "YELL", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconsize = {14, 14}, texcoord = {0.0390625, 0.203125, 0.09375, 0.375}, iconcolor = {1, 0.3, 0, 1}, label = "Yell", onclick},
-        {value = "RAID", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconcolor = {1, 0.49, 0}, iconsize = {14, 14}, texcoord = {0.53125, 0.7265625, 0.078125, 0.40625}, label = "Raid", onclick},
-        {value = "WHISPER", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconcolor = {1, 0.49, 1}, iconsize = {14, 14}, texcoord = {0.0546875, 0.1953125, 0.625, 0.890625}, label = "Whisper", onclick},
+        {value = "SAY", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconsize = {14, 14}, texcoord = {0.0390625, 0.203125, 0.09375, 0.375}, label = "Say", onclick = function() EposRT.Settings.AnnouncementChannel = "SAY" end },
+        {value = "YELL", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconsize = {14, 14}, texcoord = {0.0390625, 0.203125, 0.09375, 0.375}, iconcolor = {1, 0.3, 0, 1}, label = "Yell", onclick = function() EposRT.Settings.AnnouncementChannel = "YELL" end},
+        {value = "RAID", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconcolor = {1, 0.49, 0}, iconsize = {14, 14}, texcoord = {0.53125, 0.7265625, 0.078125, 0.40625}, label = "Raid", onclick = function() EposRT.Settings.AnnouncementChannel = "RAID" end},
+        {value = "WHISPER", icon = [[Interface\FriendsFrame\UI-Toast-ToastIcons]], iconcolor = {1, 0.49, 1}, iconsize = {14, 14}, texcoord = {0.0546875, 0.1953125, 0.625, 0.890625}, label = "Whisper", onclick = function() EposRT.Settings.AnnouncementChannel = "WHISPER" end},
     }
     local buildChannelMenu = function()
         return channel_list
@@ -118,42 +117,10 @@ function EposUI:Init()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Log Data Requests in Chat",
-            desc = "Prints a message to the chat when a data request is made.",
-            get = function() return EposRT.Settings["EnableDataRequestLogging"] end,
-            set = function(_, _, value) EposRT.Settings["EnableDataRequestLogging"] = value end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Log Data Receives in Chat",
-            desc = "Prints a message to the chat when data is received.",
-            get = function() return EposRT.Settings["EnableDataReceiveLogging"] end,
-            set = function(_, _, value) EposRT.Settings["EnableDataReceiveLogging"] = value end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
             name = "Request Data on Player Login",
             desc = "Automatically sends a data request when a player logs in.",
             get = function() return EposRT.Settings["EnableDataRequestOnLoginEvent"] end,
             set = function(_, _, value) EposRT.Settings["EnableDataRequestOnLoginEvent"] = value end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable Event Logging",
-            desc = "Logs important raid events for later review or troubleshooting.",
-            get = function() return EposRT.Settings.EnableEventLogging end,
-            set = function(_, _, value) EposRT.Settings.EnableEventLogging = value end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable Debug Mode",
-            desc = "Activate Debug Mode to log detailed information about the addon’s operation.",
-            get = function() return EposRT.Settings.Debug end,
-            set = function(_, _, value) EposRT.Settings.Debug = value end,
         },
         {
             type = "execute",
@@ -161,7 +128,7 @@ function EposUI:Init()
             desc = "Resets all saved settings to their default values and reloads the UI.",
             icontexture = [[Interface\GLUES\LOGIN\Glues-CheckBox-Check]],
             func = function()
-                wipe(EposRT)
+                wipe(EposRT.Settings)
                 ReloadUI()
             end,
         },
@@ -196,6 +163,18 @@ function EposUI:Init()
             end,
             nocombat = true,  -- Ensure this can be changed outside of combat
         },
+        {
+            type = "execute",
+            name = "Clear Setup",
+            desc = "Resets all saved setup settings to their default values and reloads the UI.",
+            icontexture = [[Interface\GLUES\LOGIN\Glues-CheckBox-Check]],
+            func = function()
+                wipe(EposRT.Setups.JSON)
+                wipe(EposRT.Setups.Current)
+                EposUI.SetupsTab:MasterRefresh()
+                EposUI.SetupsTab.__bossDropdown:Refresh()
+            end,
+        },
         { type = "break" },
         {
             type = "label",
@@ -206,7 +185,7 @@ function EposUI:Init()
         },
         {
             type = "select",
-            get = function() return EposRT.Settings.FrameStrata or "HIGH" end,
+            get = function() return EposRT.Settings.FrameStrata end,
             values = buildStrataMenu,
             name = "Frame Strata",
             desc = "Adjust the frame strata (z-order) for Epos Raid Tools. Higher strata will place the UI above other UI elements.",
@@ -249,10 +228,66 @@ function EposUI:Init()
                     EposUI.StatusBar:Show()
                 end
             end,
-        }
+        },
+        { type = "breakline" },
+        {
+            type = "label",
+            get = function()
+                return "Logging Options"
+            end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Log Data Requests in Chat",
+            desc = "Prints a message to the chat when a data request is made.",
+            get = function() return EposRT.Settings["EnableDataRequestLogging"] end,
+            set = function(_, _, value) EposRT.Settings["EnableDataRequestLogging"] = value end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Log Data Receives in Chat",
+            desc = "Prints a message to the chat when data is received.",
+            get = function() return EposRT.Settings["EnableDataReceiveLogging"] end,
+            set = function(_, _, value) EposRT.Settings["EnableDataReceiveLogging"] = value end,
+        },
+        { type = "break" },
+        {
+            type = "label",
+            get = function()
+                return "Developer Options"
+            end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Debug Mode",
+            desc = "Activate Debug Mode to log detailed information about the addon’s operation.",
+            get = function() return EposRT.Settings.Debug end,
+            set = function(_, _, value) EposRT.Settings.Debug = value end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Event Logging",
+            desc = "Logs important raid events for later review or troubleshooting.",
+            get = function() return EposRT.Settings.EnableEventLogging end,
+            set = function(_, _, value) EposRT.Settings.EnableEventLogging = value end,
+        },
+        {
+            type = "execute",
+            name = "Clear Database",
+            desc = "Resets Epos Raid Tools to their default values and reloads the UI.",
+            icontexture = [[Interface\GLUES\LOGIN\Glues-CheckBox-Check]],
+            func = function()
+                wipe(EposRT)
+                ReloadUI()
+            end,
+        },
     }
-
-
     -- Build Empty/AddOn & Setup Menus
     local menuX = 10
     local menuY = -100
@@ -288,10 +323,10 @@ function EposUI:Init()
     self.AddOnsTabOptions = BuildAddOnsInterfaceOptions()
 
     self.SetupsTab = BuildSetupsInterface(setupTab)
-    self.SetupsTabOptions = BuildSetupsInterfaceOptions()
+    -- self.SetupsTabOptions = BuildSetupsInterfaceOptions()
 
     -- Display Version in Status Bar
-    local title = C_AddOns.GetAddOnMetadata("EposRaidTools", "Title") or "Epos Raid Tools"
+    local title = "Epos Raid Tools"
     local version = C_AddOns.GetAddOnMetadata("EposRaidTools", "Version") or "?.?.?"
     local statusText = title .. " v" .. version
     if self.StatusBar and self.StatusBar.authorName then

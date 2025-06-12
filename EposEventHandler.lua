@@ -16,6 +16,9 @@ eventFrame:RegisterEvent("GUILD_ROSTER_UPDATE")
 eventFrame:SetScript("OnEvent", function(self, eventName, ...)
     -- “true” indicates this is a Blizzard‐fired event; “false” will be passed for internal events
     Epos:HandleEvent(eventName, true, false, ...)
+    if EposRT.Settings.EnableEventLogging then
+        Epos:Msg(eventName)
+    end
 end)
 
 Epos.EventFrame = eventFrame
@@ -42,9 +45,10 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
 
             -- Settings
             EposRT.Settings.Minimap = EposRT.Settings.Minimap or { hide = false }
+            EposRT.Settings.FrameStrata = EposRT.Settings.FrameStrata or "HIGH"
             EposRT.Settings.Transparency = EposRT.Settings.Transparency or false
             EposRT.Settings.HideStatusBar = EposRT.Settings.HideStatusBar or false
-            EposRT.Settings.AnnouncementChannel = EposRT.Settings.AnnouncementChannel or "WHISPER"
+            EposRT.Settings.AnnouncementChannel = EposRT.Settings.AnnouncementChannel or "RAID"
             EposRT.Settings.AnnounceBenchedPlayers = EposRT.Settings.AnnounceBenchedPlayers == nil and true or EposRT.Settings.AnnounceBenchedPlayers
             EposRT.Settings.EnableEventLogging = EposRT.Settings.EnableEventLogging or false
             EposRT.Settings.EnableDataRequestOnLoginEvent = EposRT.Settings.EnableDataRequestOnLoginEvent == nil and true or EposRT.Settings.EnableDataRequestOnLoginEvent
@@ -62,7 +66,7 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
                 ["Officer Alt"] = false,
                 Raider = true,
                 ["Raid Alt"] = false,
-                Trial = false,
+                Trial = true,
             }
 
             -- Crests
@@ -127,6 +131,7 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
 
         -- ask data on player login
         if payload.event == "PLAYER_ENTERING_WORLD" then
+            if not EposRT.GuildRoster.Players[payload.data.name] then return end
             if EposRT.Settings.EnableDataRequestOnLoginEvent then
                 local playerName = payload.data.name
                 local classColor = Epos:GetClassColorForPlayer(playerName)
@@ -144,6 +149,8 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
             if EposRT.Settings.EnableDataReceiveLogging then
                 local playerName = payload.data.name
                 local classColor = Epos:GetClassColorForPlayer(playerName)
+
+                if not EposRT.GuildRoster.Players[playerName] then return end
 
                 Epos:Msg(string.format("Received Data from |cff%02x%02x%02x%s|r",
                         classColor.r * 255, classColor.g * 255, classColor.b * 255, playerName))

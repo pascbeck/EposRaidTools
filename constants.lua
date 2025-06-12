@@ -66,6 +66,15 @@ local BOSS_ICONS = {
     6392621
 }
 
+local GUILD_RANKS = {
+    "Guildlead",
+    "Officer",
+    "Officer Alt",
+    "Raider",
+    "Raid Alt",
+    "Trial",
+}
+
 --- Combine into Epos.Constants
 Epos.Constants = {
     -- Window dimensions
@@ -86,6 +95,8 @@ Epos.Constants = {
 
     -- Placeholder for additional option constants (populated at runtime)
     options   = {},
+
+    guildRanks = GUILD_RANKS,
 
     bossIcons = BOSS_ICONS,
 }

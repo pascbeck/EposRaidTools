@@ -130,12 +130,14 @@ function BuildAddOnsInterface(parent)
                 local current = EposRT.AddOns and EposRT.AddOns.Current
                 local addon = addons[current]
 
+
+
                 if EposRT.GuildRoster.Tracked[player.rank] and not EposRT.GuildRoster.Blacklist[player.name] then
                     table_insert(data, {
                         name = player.name,
                         class = player.class,
                         rank = player.rank,
-                        installed = addon and addon.installed or false,
+                        installed = addon and addon.version ~= "-",
                         version = addon and addon.version or "-",
                         loaded = addon and addon.loaded or false,
                         ts = timestamp,
