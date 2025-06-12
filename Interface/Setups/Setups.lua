@@ -92,7 +92,7 @@ function BuildSetupsInterface(parent)
                     return
                 end
 
-                Epos:ApplyGroups(EposRT.Setups.Current.Setup.benched)
+                Epos:ApplyGroups(EposRT.Setups.Current.Setup.sort)
             end,
             C.tabs.buttonWidth, C.tabs.buttonHeight,
             "Apply Roster",

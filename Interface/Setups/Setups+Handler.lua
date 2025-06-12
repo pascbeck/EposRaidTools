@@ -11,6 +11,15 @@ function Epos:ResetSetupSavedVariables ()
 end
 
 function Epos:ApplyGroups (list)
+    -- Function to remove the "-Blackhand" part from each string
+    for i, name in ipairs(list) do
+        if string.match(name, "-Blackhand") then
+            list[i] = name:match("^(.-)-Blackhand")  -- Remove "-Blackhand" and keep the player name
+        end
+    end
+
+    DevTools_Dump(list)
+
     Epos:ResetSetupSavedVariables()
     Epos.EventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 
