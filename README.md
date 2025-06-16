@@ -174,14 +174,15 @@
   ```lua
   {
     name           = "Player-Realm",
-    class          = "DEATHKNIGHT",   -- e.g., player’s class in uppercase
+    class          = "DEATHKNIGHT",
     currency = {
-      quantity         = <current amount>,
-      totalEarned      = <lifetime earned>,
-      maxQuantity      = <weekly cap>,
-      canEarnPerWeek   = <boolean>,
-      -- … any other fields you choose to include …
+        ...C_CurrencyInfo.GetCurrencyInfo(PAYLOAD_IDS)
     },
-    timestamp      = <Unix epoch>,      -- time of the data snapshot
-    -- … any other custom data …
+     weakauras = {
+        ...WeakAuras.GetData(PAYLOAD_IDS)
+     }
+     addons = {
+      ...GetAddOnMetadata(PAYLOAD_IDS)
+     }
+    timestamp      = <Unix epoch>,
   }
