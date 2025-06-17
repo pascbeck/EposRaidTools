@@ -184,6 +184,18 @@ function EposUI:Init()
             end,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Announce Unbenched Players",
+            desc = "Announces players who are unbenched in the current setup when applying the roster (via channel below).",
+            get = function()
+                return EposRT.Settings.AnnounceUnBenchedPlayers
+            end,
+            set = function(_, _, value)
+                EposRT.Settings.AnnounceUnBenchedPlayers = value
+            end,
+        },
+        {
             type = "select",
             get = function()
                 return EposRT.Settings.AnnouncementChannel
@@ -204,8 +216,10 @@ function EposUI:Init()
             func = function()
                 wipe(EposRT.Setups.JSON)
                 wipe(EposRT.Setups.Current)
+                wipe(EposRT.Setups.Old)
                 EposUI.SetupsTab:MasterRefresh()
                 EposUI.SetupsTab.__bossDropdown:Refresh()
+                ReloadUI()
             end,
         },
         { type = "break" },

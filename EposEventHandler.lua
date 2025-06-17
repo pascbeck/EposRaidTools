@@ -11,6 +11,7 @@ local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("GUILD_ROSTER_UPDATE")
+eventFrame:RegisterEvent("GROUP_FORMED")
 
 -- Set the script handler to route all events through Epos:HandleEvent
 eventFrame:SetScript("OnEvent", function(self, eventName, ...)
@@ -50,6 +51,8 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
             EposRT.Settings.HideStatusBar = EposRT.Settings.HideStatusBar or false
             EposRT.Settings.AnnouncementChannel = EposRT.Settings.AnnouncementChannel or "RAID"
             EposRT.Settings.AnnounceBenchedPlayers = EposRT.Settings.AnnounceBenchedPlayers == nil and true or EposRT.Settings.AnnounceBenchedPlayers
+            EposRT.Settings.AnnounceUnBenchedPlayers = EposRT.Settings.AnnounceUnBenchedPlayers == nil and true or EposRT.Settings.AnnounceUnBenchedPlayers
+
             EposRT.Settings.EnableEventLogging = EposRT.Settings.EnableEventLogging or false
             EposRT.Settings.EnableDataRequestOnLoginEvent = EposRT.Settings.EnableDataRequestOnLoginEvent == nil and true or EposRT.Settings.EnableDataRequestOnLoginEvent
             EposRT.Settings.EnableDataReceiveLogging = EposRT.Settings.EnableDataReceiveLogging == nil and true or EposRT.Settings.EnableDataReceiveLogging
@@ -101,9 +104,14 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
 
             -- Setups
             EposRT.Setups.JSON = EposRT.Setups.JSON or {}
+
             EposRT.Setups.Current = EposRT.Setups.Current or {}
             EposRT.Setups.Current.Setup = EposRT.Setups.Current.Setup or {}
             EposRT.Setups.Current.Boss = EposRT.Setups.Current.Boss or {}
+
+            EposRT.Setups.Old = EposRT.Setups.Old or {}
+            EposRT.Setups.Old.Setup = EposRT.Setups.Old.Setup or {}
+            EposRT.Setups.Old.Boss = EposRT.Setups.Old.Boss or {}
 
             -- Reset assignments each time
             EposRT.Setups.AssignmentHandler = EposRT.Setups.AssignmentHandler or {}
@@ -134,6 +142,9 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
             self.timer = nil
             Epos:ProcessRoster()
         end)
+
+    elseif eventName == "GROUP_FORMED" and isWoWEvent then
+        EposRT.Setups.Old.Setup = {}
 
     elseif eventName == "EPOS_MSG" and isInternal then
         local payload, sender = ...

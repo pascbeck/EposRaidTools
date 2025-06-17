@@ -18,8 +18,6 @@ function Epos:ApplyGroups (list)
         end
     end
 
-    DevTools_Dump(list)
-
     Epos:ResetSetupSavedVariables()
     Epos.EventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 
@@ -225,25 +223,85 @@ function Epos:ProcessRoster ()
     s.needGroup = nil
     Epos.EventFrame:UnregisterEvent('GROUP_ROSTER_UPDATE')
 
+    local function QueueWhispers(messageMap, delayStep)
+        local delay = 0
+        for player, message in pairs(messageMap) do
+            C_Timer.After(delay, function()
+                SendChatMessage(message, "WHISPER", nil, player)
+            end)
+            delay = delay + (delayStep or 0.25)
+        end
+    end
+
+    local function SplitAndSendMessage(text, channel, basePrefix)
+        local maxLen = 255
+        basePrefix = basePrefix or ""
+        local fullText = basePrefix .. text
+
+        if #fullText <= maxLen then
+            SendChatMessage(fullText, channel)
+        else
+            SendChatMessage(basePrefix, channel)
+            local pos = 1
+            while pos <= #text do
+                local chunk = text:sub(pos, pos + maxLen - 1)
+                SendChatMessage(chunk, channel)
+                pos = pos + maxLen
+            end
+        end
+    end
+
+    if EposRT.Settings.AnnounceUnBenchedPlayers then
+        local index = EposRT.Setups.Current.Boss:match("^(%d+)")
+        local _, _, _, _, link = EJ_GetEncounterInfoByIndex(index, 1296)
+
+        if next(EposRT.Setups.Old.Setup.benched or {}) then
+            local currentBenchedSet = {}
+            for _, name in ipairs(EposRT.Setups.Current.Setup.benched) do
+                currentBenchedSet[name] = true
+            end
+
+            local unbenched = {}
+            for _, oldName in ipairs(EposRT.Setups.Old.Setup.benched) do
+                if not currentBenchedSet[oldName] then
+                    table.insert(unbenched, oldName)
+                end
+            end
+
+            if #unbenched > 0 then
+                if EposRT.Settings.AnnouncementChannel == "WHISPER" then
+                    local msgMap = {}
+                    for _, name in ipairs(unbenched) do
+                        msgMap[name] = "You are no longer benched for: " .. link
+                    end
+                    QueueWhispers(msgMap)
+                else
+                    local unbenchedList = table.concat(unbenched, ", ")
+                    SplitAndSendMessage(unbenchedList, EposRT.Settings.AnnouncementChannel, "The following players are now unbenched for: " .. link .. " - ")
+                end
+            end
+        end
+    end
+
+    -- 💾 Save current setup as old
+    EposRT.Setups.Old.Setup.benched = {}
+    for i, name in ipairs(EposRT.Setups.Current.Setup.benched) do
+        EposRT.Setups.Old.Setup.benched[i] = name
+    end
+
     if EposRT.Settings.AnnounceBenchedPlayers then
         local index = EposRT.Setups.Current.Boss:match("^(%d+)")
         local _, _, _, _, link = EJ_GetEncounterInfoByIndex(index, 1296)
-        local displayText
 
         if EposRT.Settings.AnnouncementChannel == "WHISPER" then
-            displayText = "You are benched for: " .. link
-            for _, bench in pairs(EposRT.Setups.Current.Setup.benched) do
-                print(bench)
-                SendChatMessage(displayText, "WHISPER", nil, bench)
+            local msgMap = {}
+            for _, name in ipairs(EposRT.Setups.Current.Setup.benched) do
+                msgMap[name] = "You are benched for: " .. link
             end
+            QueueWhispers(msgMap)
         else
-            local benchNames = {}
-            for _, bench in pairs(EposRT.Setups.Current.Setup.benched) do
-                table.insert(benchNames, bench)
-            end
-            local benchList = table.concat(benchNames, ", ")
-            displayText = "The following players are benched for: " .. link .. " - " .. benchList
-            SendChatMessage(displayText, EposRT.Settings.AnnouncementChannel)
+            local benchList = table.concat(EposRT.Setups.Current.Setup.benched, ", ")
+            SplitAndSendMessage(benchList, EposRT.Settings.AnnouncementChannel, "The following players are benched for: " .. link .. " - ")
         end
     end
 
