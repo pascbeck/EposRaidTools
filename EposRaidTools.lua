@@ -143,10 +143,14 @@ SlashCmdList.EPOS = function(cmd)
     elseif cmd:match("^dump%s+(.+)$") then
         local playerName = cmd:match("^dump%s+(.+)$"):trim()
         DevTools_Dump(EposRT.GuildRoster.Database[playerName])
+        elseif cmd == "show" then
+        Epos.EposUI:ToggleMainFrame()
+
     else
         Epos:Msg("|cff78A8FFusage:|r")
-        Epos:Msg("   |cff78A8FF/epos delete <player_name-realm>|r - Remove a player from the database.")
-        Epos:Msg("   |cff78A8FF/epos dump <player_name-realm>|r - Dump player data from the database.")
+        Epos:Msg("   |cff78A8FF/epos delete <player-realm>|r - Remove a player from the database.")
+        Epos:Msg("   |cff78A8FF/epos dump <player-realm>|r - Dump player data from the database.")
+        Epos:Msg("   |cff78A8FF/epos show|r - Show the main UI")
     end
 end
 
