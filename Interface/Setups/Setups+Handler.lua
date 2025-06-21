@@ -11,6 +11,11 @@ function Epos:ResetSetupSavedVariables ()
 end
 
 function Epos:ApplyGroups (list)
+    if not next(list or {}) then
+        Epos:Msg("No Setup selected", "Setups")
+        return
+    end
+
     -- Function to remove the "-Blackhand" part from each string
     for i, name in ipairs(list) do
         if string.match(name, "-Blackhand") then
@@ -22,7 +27,7 @@ function Epos:ApplyGroups (list)
     Epos.EventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 
     if not IsInRaid() then
-        Epos:Msg("Cannot be used outside raid environment")
+        Epos:Msg("Cannot be used outside raid environment", "Setups")
         return
     end
 
@@ -36,7 +41,7 @@ function Epos:ApplyGroups (list)
     end
 
     if inCombatUnits then
-        Epos:Msg("|cffff0000" .. ERROR_CAPS .. ".|r " .. L.RaidGroupsPlayersInCombat .. ": " .. inCombatUnits)
+        Epos:Msg("|cffff0000" .. ERROR_CAPS .. ".|r " .. L.RaidGroupsPlayersInCombat .. ": " .. inCombatUnits, "Setups")
         return
     end
 
@@ -89,7 +94,7 @@ function Epos:ProcessRoster ()
         end
     end
     if UnitsInCombat then
-        Epos:Msg("|cffff0000" .. ERROR_CAPS .. ".|r " .. L.RaidGroupsCombatStarted .. ": " .. UnitsInCombat)
+        Epos:Msg("|cffff0000" .. ERROR_CAPS .. ".|r " .. L.RaidGroupsCombatStarted .. ": " .. UnitsInCombat, "Setups")
 
         s.needGroup = nil
 
@@ -305,5 +310,5 @@ function Epos:ProcessRoster ()
         end
     end
 
-    Epos:Msg("Applied Setup for " .. EposRT.Setups.Current.Boss)
+    Epos:Msg("Applied Setup for " .. EposRT.Setups.Current.Boss, "Setups")
 end

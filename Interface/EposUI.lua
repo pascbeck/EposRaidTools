@@ -119,240 +119,170 @@ function EposUI:Init()
     -- Table of option descriptors passed to BuildMenu on the Settings tab
     -- Table of option descriptors passed to BuildMenu on the Settings tab
     local settingsOptions = {
+    {
+        type = "label", get = function() return "General Settings" end,
+        text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+    },
+    {
+        type = "toggle", boxfirst = true, name = "Auto Request on Player Login",
+        desc = "Automatically send data request when a player logs in.",
+        get = function() return EposRT.Settings.EnableDataRequestOnLoginEvent end,
+        set = function(_, _, val) EposRT.Settings.EnableDataRequestOnLoginEvent = val end,
+    },
+    {
+        type = "toggle", boxfirst = true, name = "Compare MRT Notes on Ready Check",
+        desc = "Compares raid notes when a ready check is initiated.",
+        get = function() return EposRT.Settings.CompareNotes end,
+        set = function(_, _, val) EposRT.Settings.CompareNotes = val end
+    },
+
+    { type = "break" },
+
+    {
+        type = "label", get = function() return "UI Appearance" end,
+        text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+    },
+    {
+        type = "select", name = "Frame Strata", desc = "Adjust UI layering (z-index).",
+        get = function() return EposRT.Settings.FrameStrata end,
+        values = buildStrataMenu,
+        set = function(_, _, val)
+            EposRT.Settings.FrameStrata = val
+            EposUI:SetFrameStrata(val)
+        end, nocombat = true
+    },
+    {
+        type = "toggle", boxfirst = true, name = "Hide Minimap Button",
+        desc = "Hide the minimap icon for this addon.",
+        get = function() return EposRT.Settings.Minimap.hide end,
+        set = function(_, _, val)
+            EposRT.Settings.Minimap.hide = val
+            if LDBIcon then
+                LDBIcon:Refresh("EposRT", EposRT.Settings.Minimap)
+            end
+        end
+    },
+    {
+        type = "toggle", boxfirst = true, name = "Window Transparency",
+        desc = "Enable transparency for the addon window.",
+        get = function() return EposRT.Settings.Transparency end,
+        set = function(_, _, val)
+            EposRT.Settings.Transparency = val
+            EposUI:SetBackdropColor(0, 0, 0, val and 0.9 or 1)
+        end
+    },
+    {
+        type = "toggle", boxfirst = true, name = "Hide UI Status Bar",
+        desc = "Hide the status bar at the bottom of the main frame.",
+        get = function() return EposRT.Settings.HideStatusBar end,
+        set = function(_, _, val)
+            EposRT.Settings.HideStatusBar = val
+            if val then EposUI.StatusBar:Hide() else EposUI.StatusBar:Show() end
+        end
+    },
+
+    { type = "break" },
+
+    {
+        type = "label", get = function() return "Roster Setup" end,
+        text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+    },
+    {
+        type = "toggle", boxfirst = true, name = "Announce Benched Players",
+        desc = "Announces benched players in chosen channel.",
+        get = function() return EposRT.Settings.AnnounceBenchedPlayers end,
+        set = function(_, _, val) EposRT.Settings.AnnounceBenchedPlayers = val end,
+    },
+    {
+        type = "toggle", boxfirst = true, name = "Announce Unbenched Players",
+        desc = "Announces players brought back into the setup.",
+        get = function() return EposRT.Settings.AnnounceUnBenchedPlayers end,
+        set = function(_, _, val) EposRT.Settings.AnnounceUnBenchedPlayers = val end,
+    },
+    {
+        type = "select", name = "Announcement Channel",
+        desc = "Select how player announcements are broadcast.",
+        get = function() return EposRT.Settings.AnnouncementChannel end,
+        values = buildChannelMenu,
+        set = function(_, _, val) EposRT.Settings.AnnouncementChannel = val end,
+        nocombat = true
+    },
+    {
+        type = "execute", name = "Clear Setup",
+        desc = "Reset current raid setup and reload UI.",
+        icontexture = [[Interface\GLUES\LOGIN\Glues-CheckBox-Check]],
+        func = function()
+            wipe(EposRT.Setups.JSON)
+            wipe(EposRT.Setups.Current)
+            wipe(EposRT.Setups.Old)
+            EposUI.SetupsTab:MasterRefresh()
+            EposUI.SetupsTab.__bossDropdown:Refresh()
+            ReloadUI()
+        end
+    },
+
+    { type = "breakline" },
+
+    {
+        type = "label", get = function() return "Logging" end,
+        text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+    },
+    {
+        type = "toggle", boxfirst = true, name = "Log Data Requests",
+        desc = "Logs when a data request is sent.",
+        get = function() return EposRT.Settings.EnableDataRequestLogging end,
+        set = function(_, _, val) EposRT.Settings.EnableDataRequestLogging = val end,
+    },
+    {
+        type = "toggle", boxfirst = true, name = "Log Data Receives",
+        desc = "Logs when data is received.",
+        get = function() return EposRT.Settings.EnableDataReceiveLogging end,
+        set = function(_, _, val) EposRT.Settings.EnableDataReceiveLogging = val end,
+    },
         {
-            type = "label",
-            get = function()
-                return "General Settings"
-            end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Hide Minimap Button",
-            desc = "Enable this to hide the minimap button for the addon.",
-            get = function()
-                return EposRT.Settings["Minimap"].hide
-            end,
-            set = function(_, _, value)
-                EposRT.Settings["Minimap"].hide = value
-                if LDBIcon then
-                    LDBIcon:Refresh("EposRT", EposRT.Settings["Minimap"])
-                end
-            end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Request Data on Player Login",
-            desc = "Automatically sends a data request when a player logs in.",
-            get = function()
-                return EposRT.Settings["EnableDataRequestOnLoginEvent"]
-            end,
-            set = function(_, _, value)
-                EposRT.Settings["EnableDataRequestOnLoginEvent"] = value
-            end,
-        },
-        {
-            type = "execute",
-            name = "Clear All Settings",
-            desc = "Resets all saved settings to their default values and reloads the UI.",
-            icontexture = [[Interface\GLUES\LOGIN\Glues-CheckBox-Check]],
-            func = function()
-                wipe(EposRT.Settings)
-                ReloadUI()
-            end,
-        },
-        { type = "break" },
-        {
-            type = "label",
-            get = function()
-                return "Setup Options"
-            end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Announce Benched Players",
-            desc = "Announces players who are benched in the current setup when applying the roster (via channel below).",
-            get = function()
-                return EposRT.Settings.AnnounceBenchedPlayers
-            end,
-            set = function(_, _, value)
-                EposRT.Settings.AnnounceBenchedPlayers = value
-            end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Announce Unbenched Players",
-            desc = "Announces players who are unbenched in the current setup when applying the roster (via channel below).",
-            get = function()
-                return EposRT.Settings.AnnounceUnBenchedPlayers
-            end,
-            set = function(_, _, value)
-                EposRT.Settings.AnnounceUnBenchedPlayers = value
-            end,
-        },
-        {
-            type = "select",
-            get = function()
-                return EposRT.Settings.AnnouncementChannel
-            end,
-            values = buildChannelMenu,
-            name = "Announcement Channel",
-            desc = "Choose the channel for announcing benched players (e.g., Whisper, Say, etc.).",
-            set = function(_, _, value)
-                EposRT.Settings.AnnouncementChannel = value
-            end,
-            nocombat = true, -- Ensure this can be changed outside of combat
-        },
-        {
-            type = "execute",
-            name = "Clear Setup",
-            desc = "Resets all saved setup settings to their default values and reloads the UI.",
-            icontexture = [[Interface\GLUES\LOGIN\Glues-CheckBox-Check]],
-            func = function()
-                wipe(EposRT.Setups.JSON)
-                wipe(EposRT.Setups.Current)
-                wipe(EposRT.Setups.Old)
-                EposUI.SetupsTab:MasterRefresh()
-                EposUI.SetupsTab.__bossDropdown:Refresh()
-                ReloadUI()
-            end,
-        },
-        { type = "break" },
-        {
-            type = "label",
-            get = function()
-                return "Interface Options"
-            end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "select",
-            get = function()
-                return EposRT.Settings.FrameStrata
-            end,
-            values = buildStrataMenu,
-            name = "Frame Strata",
-            desc = "Adjust the frame strata (z-order) for Epos Raid Tools. Higher strata will place the UI above other UI elements.",
-            set = function(_, _, value)
-                EposRT.Settings.FrameStrata = value
-                EposUI:SetFrameStrata(value) -- Set the frame strata dynamically
-            end,
-            nocombat = true, -- Ensure this can be changed outside of combat
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable Transparency",
-            desc = "Enable or disable the transparency effect for the UI window.",
-            get = function()
-                return EposRT.Settings.Transparency
-            end,
-            set = function(_, _, value)
-                EposRT.Settings.Transparency = value
-                if value then
-                    EposUI:SetBackdropColor(0, 0, 0, 0.9)
-                else
-                    EposUI:SetBackdropColor(0, 0, 0, 1)
-                end
-            end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Hide Status Bar",
-            desc = "Enable this to hide the status bar at the bottom of the UI.",
-            get = function()
-                return EposRT.Settings.HideStatusBar
-            end,
-            set = function(_, _, value)
-                EposRT.Settings.HideStatusBar = value
-                if value then
-                    EposUI.StatusBar:Hide()
-                else
-                    EposUI.StatusBar:Show()
-                end
-            end,
-        },
-        { type = "breakline" },
-        {
-            type = "label",
-            get = function()
-                return "Logging Options"
-            end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Log Data Requests in Chat",
-            desc = "Prints a message to the chat when a data request is made.",
-            get = function()
-                return EposRT.Settings["EnableDataRequestLogging"]
-            end,
-            set = function(_, _, value)
-                EposRT.Settings["EnableDataRequestLogging"] = value
-            end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Log Data Receives in Chat",
-            desc = "Prints a message to the chat when data is received.",
-            get = function()
-                return EposRT.Settings["EnableDataReceiveLogging"]
-            end,
-            set = function(_, _, value)
-                EposRT.Settings["EnableDataReceiveLogging"] = value
-            end,
-        },
-        { type = "break" },
-        {
-            type = "label",
-            get = function()
-                return "Developer Options"
-            end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable Debug Mode",
-            desc = "Activate Debug Mode to log detailed information about the addon’s operation.",
-            get = function()
-                return EposRT.Settings.Debug
-            end,
-            set = function(_, _, value)
-                EposRT.Settings.Debug = value
-            end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable Event Logging",
-            desc = "Logs important raid events for later review or troubleshooting.",
-            get = function()
-                return EposRT.Settings.EnableEventLogging
-            end,
-            set = function(_, _, value)
-                EposRT.Settings.EnableEventLogging = value
-            end,
-        },
-        {
-            type = "execute",
-            name = "Clear Database",
-            desc = "Resets Epos Raid Tools to their default values and reloads the UI.",
-            icontexture = [[Interface\GLUES\LOGIN\Glues-CheckBox-Check]],
-            func = function()
-                wipe(EposRT)
-                ReloadUI()
-            end,
-        },
-    }
+        type = "toggle", boxfirst = true, name = "Logs Notes Mismatch",
+        desc = "Prints logs to chat when mismatched notes are detected.",
+        get = function() return EposRT.Settings.ShowMismatchLogs end,
+        set = function(_, _, val) EposRT.Settings.ShowMismatchLogs = val end
+    },
+    {
+        type = "toggle", boxfirst = true, name = "Log EposRT Events",
+        desc = "Enable logging of important raid events.",
+        get = function() return EposRT.Settings.EnableEventLogging end,
+        set = function(_, _, val) EposRT.Settings.EnableEventLogging = val end,
+    },
+
+    { type = "break" },
+
+    {
+        type = "label", get = function() return "Developer Tools" end,
+        text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+    },
+    {
+        type = "toggle", boxfirst = true, name = "Enable Debug Mode",
+        desc = "Log extra information for troubleshooting.",
+        get = function() return EposRT.Settings.Debug end,
+        set = function(_, _, val) EposRT.Settings.Debug = val end,
+    },
+    {
+        type = "execute", name = "Clear All Settings",
+        desc = "Resets all settings and reloads the UI.",
+        icontexture = [[Interface\GLUES\LOGIN\Glues-CheckBox-Check]],
+        func = function()
+            wipe(EposRT.Settings)
+            ReloadUI()
+        end
+    },
+    {
+        type = "execute", name = "Clear Database",
+        desc = "Wipe all stored addon data and reload UI.",
+        icontexture = [[Interface\GLUES\LOGIN\Glues-CheckBox-Check]],
+        func = function()
+            wipe(EposRT)
+            ReloadUI()
+        end
+    },
+}
     -- Build Empty/AddOn & Setup Menus
     local menuX = 10
     local menuY = -100

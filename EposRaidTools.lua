@@ -109,17 +109,18 @@ function Epos:RequestData(event, channel, sender, skip)
     }, "ALERT", channel, sender)
 
     if not skip and EposRT.Settings.EnableDataRequestLogging then
-        Epos:Msg("Sending Data Request to GUILD")
+        Epos:Msg("Sending Request to GUILD", "Data")
     end
 end
 
-function Epos:Msg(msg)
-    print("|cFF78A8FFEpos Raid Tools|r: " .. msg)
+function Epos:Msg(msg, prefix)
+    prefix = prefix or "General"
+    local coloredPrefix = "|cFFFFFF00[" .. prefix .. "]|r"
+    print("|cFF78A8FFEpos Raid Tools|r " .. coloredPrefix .. ": " .. msg)
 end
-
 function Epos:DBGMsg(msg)
     if EposRT.Settings.Debug then
-        print("|cFF78A8FFEpos Raid Tools Debug|r: " .. msg)
+        print("|cFFFF0000Epos Raid Tools [Debug]|r: " .. msg)
     end
 end
 

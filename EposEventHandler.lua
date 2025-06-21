@@ -12,6 +12,7 @@ eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("GUILD_ROSTER_UPDATE")
 eventFrame:RegisterEvent("GROUP_FORMED")
+eventFrame:RegisterEvent("READY_CHECK")
 
 -- Set the script handler to route all events through Epos:HandleEvent
 eventFrame:SetScript("OnEvent", function(self, eventName, ...)
@@ -58,6 +59,10 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
             EposRT.Settings.EnableDataReceiveLogging = EposRT.Settings.EnableDataReceiveLogging == nil and true or EposRT.Settings.EnableDataReceiveLogging
             EposRT.Settings.EnableDataRequestLogging = EposRT.Settings.EnableDataRequestLogging == nil and true or EposRT.Settings.EnableDataRequestLogging
             EposRT.Settings.Debug = EposRT.Settings.Debug or false
+
+            EposRT.Settings.ShowMismatchLogs = EposRT.Settings.ShowMismatchLogs == nil and true or EposRT.Settings.ShowMismatchLogs
+            EposRT.Settings.CompareNotes = EposRT.Settings.CompareNotes == nil and true or EposRT.Settings.CompareNotes
+
 
             -- GuildRoster
             EposRT.GuildRoster.Database = EposRT.GuildRoster.Database or {}
@@ -120,6 +125,11 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
             EposRT.Setups.AssignmentHandler.lockedUnit = {}
             EposRT.Setups.AssignmentHandler.groupsReady = false
             EposRT.Setups.AssignmentHandler.groupWithRL = nil
+
+            EposRT.readyCheckNotes = {}
+            EposRT.readyCheckStarted = false
+            EposRT.readyCheckExpected = {}
+            EposRT.readyCheckEvaluated = false
         end
 
 
@@ -146,6 +156,43 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
     elseif eventName == "GROUP_FORMED" and isWoWEvent then
         EposRT.Setups.Old.Setup = {}
 
+    elseif eventName == "READY_CHECK" and isWoWEvent then
+        if not EposRT.Settings.CompareNotes then return end
+
+        EposRT.readyCheckEvaluated = false
+
+        local sender, duration = ...
+
+        local difficulty = GetRaidDifficultyID()
+        local maxSubgroup = (difficulty == 16) and 4 or 8
+
+        EposRT.readyCheckNotes = {}
+        EposRT.readyCheckStarted = true
+        EposRT.readyCheckExpected = {}
+
+        for i = 1, GetNumGroupMembers() do
+            local name, _, subgroup = GetRaidRosterInfo(i)
+            if subgroup and subgroup <= maxSubgroup then
+                local fullName = name:find("-") and name or name .. "-" .. GetRealmName()
+                if EposRT.GuildRoster.Database[fullName] then
+                    EposRT.readyCheckExpected[fullName] = true
+                    Epos:Broadcast("EPOS_NOTE_CHECK", payload, "ALERT", "WHISPER", fullName)
+                else
+                    if EposRT.Settings.Debug then
+                        Epos:DBGMsg("Skipping note request for " .. fullName .. " — no Database installed.")
+                    end
+                end
+            end
+        end
+
+        if EposRT.readyCheckTimer then
+            EposRT.readyCheckTimer:Cancel()
+        end
+
+        EposRT.readyCheckTimer = C_Timer.NewTimer(10, function()
+            Epos:EvaluateNotes()
+        end)
+
     elseif eventName == "EPOS_MSG" and isInternal then
         local payload, sender = ...
 
@@ -160,13 +207,12 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
                 Epos:RequestData("EPOS_REQUEST", "WHISPER", sender, true)
 
                 if EposRT.Settings.EnableDataRequestLogging then
-                    Epos:Msg(string.format("Sending Data Request to |cff%02x%02x%02x%s|r",
-                            classColor.r * 255, classColor.g * 255, classColor.b * 255, playerName))
+                    Epos:Msg(string.format("Sending Request to |cff%02x%02x%02x%s|r",
+                            classColor.r * 255, classColor.g * 255, classColor.b * 255, playerName), "Data")
                 end
             end
 
-
-            -- received data
+        -- received data
         elseif payload.event == "EPOS_DATA" then
             if EposRT.Settings.EnableDataReceiveLogging then
                 local playerName = payload.data.name
@@ -176,8 +222,8 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
                     return
                 end
 
-                Epos:Msg(string.format("Received Data from |cff%02x%02x%02x%s|r",
-                        classColor.r * 255, classColor.g * 255, classColor.b * 255, playerName))
+                Epos:Msg(string.format("Received from |cff%02x%02x%02x%s|r",
+                        classColor.r * 255, classColor.g * 255, classColor.b * 255, playerName), "Data")
             end
             EposRT.GuildRoster.Database[payload.data.name] = payload.data
 
@@ -185,6 +231,157 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
             EposUI.CrestsTab:MasterRefresh()
             EposUI.WeakAurasTab:MasterRefresh()
             EposUI.AddOnsTab:MasterRefresh()
+
+        elseif payload.event == "EPOS_SEND_NOTE" then
+            if not EposRT.Settings.CompareNotes then return end
+
+            local name = payload.data.name
+            EposRT.readyCheckNotes[name] = payload.data.note
+
+            -- Count how many players we expect
+            local expected = 0
+            local difficulty = GetRaidDifficultyID()
+            local maxSubgroup = (difficulty == 16) and 4 or 8
+            for i = 1, GetNumGroupMembers() do
+                local _, _, subgroup = GetRaidRosterInfo(i)
+                if subgroup and subgroup <= maxSubgroup then
+                    expected = expected + 1
+                end
+            end
+
+            local current = 0
+            for _ in pairs(EposRT.readyCheckNotes) do
+                current = current + 1
+            end
+
+            -- Check if we’ve received all the notes we were expecting
+            local received = 0
+            for name in pairs(EposRT.readyCheckNotes) do
+                if EposRT.readyCheckExpected[name] then
+                    received = received + 1
+                end
+            end
+
+            local expected = 0
+            for _ in pairs(EposRT.readyCheckExpected) do
+                expected = expected + 1
+            end
+
+            if received >= expected then
+                Epos:EvaluateNotes()
+                EposRT.readyCheckNotes = {}
+            end
         end
     end
+
 end
+
+
+
+function Epos:EvaluateNotes()
+    if EposRT.readyCheckEvaluated then
+        return
+    end
+
+    EposRT.readyCheckEvaluated = true
+
+    local notes = EposRT.readyCheckNotes or {}
+    local timestampCounts = {}
+
+    -- Count frequency of each lastUpdateTime
+    for _, note in pairs(notes) do
+        local ts = note.lastUpdateTime or 0
+        timestampCounts[ts] = (timestampCounts[ts] or 0) + 1
+    end
+
+    -- Find the most common timestamp
+    local mostCommonTs, maxCount = nil, 0
+    for ts, count in pairs(timestampCounts) do
+        if count > maxCount then
+            mostCommonTs = ts
+            maxCount = count
+        end
+    end
+
+    if not mostCommonTs then
+        return
+    end
+
+    -- Get matching note text
+    local correctText
+    for _, note in pairs(notes) do
+        if note.lastUpdateTime == mostCommonTs then
+            correctText = note.text
+            break
+        end
+    end
+
+    -- Mismatch detection
+    local mismatchedPlayers = {}
+    local receivedCount = 0
+
+    for playerName, note in pairs(notes) do
+        receivedCount = receivedCount + 1
+        if note.lastUpdateTime ~= mostCommonTs or note.text ~= correctText then
+            table.insert(mismatchedPlayers, playerName)
+        end
+    end
+
+    local totalRaidMembers = 0
+    local difficulty = GetRaidDifficultyID()
+    local maxSubgroup = (difficulty == 16) and 4 or 8
+
+    for i = 1, GetNumGroupMembers() do
+        local _, _, subgroup = GetRaidRosterInfo(i)
+        if subgroup and subgroup <= maxSubgroup then
+            totalRaidMembers = totalRaidMembers + 1
+        end
+    end
+
+    if EposRT.Settings.ShowMismatchLogs then
+        Epos:Msg(string.format("Received Notes: %d/%d", receivedCount, totalRaidMembers), "Notes")
+    end
+
+    if #mismatchedPlayers > 0 then
+        Epos:ShowNoteResultText(false, mismatchedPlayers)
+    else
+        Epos:ShowNoteResultText(true)
+    end
+
+    -- Optional: reset notes here if not waiting for READY_CHECK_FINISHED
+end
+
+local EXPRESSWAY_FONT_PATH = [[Interface\AddOns\EposRaidTools\Media\Expressway.TTF]]
+
+function Epos:ShowNoteResultText(success, mismatches)
+    local frame = RaidWarningFrame
+    local icon = "|TInterface\\AddOns\\EposRaidTools\\Media\\EposLogo:16|t"
+    local prefix = "|cFF78A8FFEpos Raid Tools|r"
+    local message
+
+    if success then
+        return
+    else
+        message = icon .. " " .. prefix .. " |cffff4444Note Mismatch|r"
+        RaidNotice_AddMessage(frame, message, ChatTypeInfo["RAID_WARNING"])
+        PlaySound(SOUNDKIT.RAID_WARNING)
+
+        if EposRT.Settings.ShowMismatchLogs then
+        -- Print mismatched players in class colors in chat frame, each on own line with dash prefix
+            Epos:Msg("|cffff4444Outdated Notes:|r", "Notes")
+            for _, playerName in ipairs(mismatches) do
+                local classColor = Epos:GetClassColorForPlayer(playerName) or {r=1,g=1,b=1}
+                local colorCode = string.format("|cff%02x%02x%02x", classColor.r * 255, classColor.g * 255, classColor.b * 255)
+                print("     - " .. colorCode .. playerName .. "|r")
+            end
+        end
+    end
+
+    -- Override the font with Expressway
+    local fontSize = 20
+    local fontFlags = "OUTLINE"
+
+    frame.slot1:SetFont(EXPRESSWAY_FONT_PATH, fontSize, fontFlags)
+    frame.slot2:SetFont(EXPRESSWAY_FONT_PATH, fontSize, fontFlags)
+end
+
