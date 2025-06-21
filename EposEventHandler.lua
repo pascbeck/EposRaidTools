@@ -307,10 +307,12 @@ function Epos:EvaluateNotes()
         return
     end
 
-    -- Get matching note text
+    local TIME_TOLERANCE = 60  -- seconds
+
+    -- Find matching note text based on timestamps within tolerance
     local correctText
     for _, note in pairs(notes) do
-        if note.lastUpdateTime == mostCommonTs then
+        if math.abs(note.lastUpdateTime - mostCommonTs) <= TIME_TOLERANCE then
             correctText = note.text
             break
         end
@@ -322,7 +324,11 @@ function Epos:EvaluateNotes()
 
     for playerName, note in pairs(notes) do
         receivedCount = receivedCount + 1
-        if note.lastUpdateTime ~= mostCommonTs or note.text ~= correctText then
+
+        local tsMatch = math.abs(note.lastUpdateTime - mostCommonTs) <= TIME_TOLERANCE
+        local textMatch = note.text == correctText
+
+        if not (tsMatch and textMatch) then
             table.insert(mismatchedPlayers, playerName)
         end
     end
