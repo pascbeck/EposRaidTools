@@ -1,6 +1,6 @@
 ## Interface: 110107
 ## Title: |cFF78A8FFEpos Raid Tools|r
-## Version:  1.0.3
+## Version:  1.0.4
 ## IconTexture: Interface\AddOns\EposRaidTools\Media\EposLogo.blp
 ## Author: Bluu
 ## DefaultState: Enable
