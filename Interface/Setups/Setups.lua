@@ -87,8 +87,8 @@ function BuildSetupsInterface(parent)
     local applyRosterBtn = DF:CreateButton(
             parent,
             function()
-                if not EposRT.Setups.Current.Boss then
-                    Epos:Msg("Can't apply empty setup")
+                if not next(EposRT.Setups.Current.Setup.sort or {}) then
+                    Epos:Msg("Can't apply empty setup", "Setups")
                     return
                 end
 

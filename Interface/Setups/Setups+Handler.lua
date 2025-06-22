@@ -16,10 +16,11 @@ function Epos:ApplyGroups (list)
         return
     end
 
-    -- Function to remove the "-Blackhand" part from each string
+    -- Function to remove the "-Realm" part from each string
+    local realm = GetRealmName()
     for i, name in ipairs(list) do
-        if string.match(name, "-Blackhand") then
-            list[i] = name:match("^(.-)-Blackhand")  -- Remove "-Blackhand" and keep the player name
+        if string.match(name, "-"..realm) then
+            list[i] = name:match("^(.-)-".. realm)  -- Remove "-Realm" and keep the player name
         end
     end
 
