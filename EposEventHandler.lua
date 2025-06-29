@@ -286,49 +286,37 @@ function Epos:EvaluateNotes()
     EposRT.readyCheckEvaluated = true
 
     local notes = EposRT.readyCheckNotes or {}
-    local timestampCounts = {}
+    local textCounts = {}
 
-    -- Count frequency of each lastUpdateTime
-    for _, note in pairs(notes) do
-        local ts = note.lastUpdateTime or 0
-        timestampCounts[ts] = (timestampCounts[ts] or 0) + 1
+    local function normalizeText(text)
+        return (text or ""):gsub("%s+", "")  -- remove all whitespace
     end
 
-    -- Find the most common timestamp
-    local mostCommonTs, maxCount = nil, 0
-    for ts, count in pairs(timestampCounts) do
+    -- Count frequency of each normalized note text
+    for _, note in pairs(notes) do
+        local normText = normalizeText(note.text)
+        textCounts[normText] = (textCounts[normText] or 0) + 1
+    end
+
+    -- Find the most common normalized note text
+    local correctNormText, maxCount = nil, 0
+    for normText, count in pairs(textCounts) do
         if count > maxCount then
-            mostCommonTs = ts
+            correctNormText = normText
             maxCount = count
         end
     end
 
-    if not mostCommonTs then
+    if not correctNormText then
         return
     end
 
-    local TIME_TOLERANCE = 60  -- seconds
-
-    -- Find matching note text based on timestamps within tolerance
-    local correctText
-    for _, note in pairs(notes) do
-        if math.abs(note.lastUpdateTime - mostCommonTs) <= TIME_TOLERANCE then
-            correctText = note.text
-            break
-        end
-    end
-
-    -- Mismatch detection
     local mismatchedPlayers = {}
     local receivedCount = 0
 
     for playerName, note in pairs(notes) do
         receivedCount = receivedCount + 1
-
-        local tsMatch = math.abs(note.lastUpdateTime - mostCommonTs) <= TIME_TOLERANCE
-        local textMatch = note.text == correctText
-
-        if not (tsMatch and textMatch) then
+        if normalizeText(note.text) ~= correctNormText then
             table.insert(mismatchedPlayers, playerName)
         end
     end
@@ -356,6 +344,7 @@ function Epos:EvaluateNotes()
 
     -- Optional: reset notes here if not waiting for READY_CHECK_FINISHED
 end
+
 
 local EXPRESSWAY_FONT_PATH = [[Interface\AddOns\EposRaidTools\Media\Expressway.TTF]]
 
