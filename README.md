@@ -167,22 +167,28 @@
 
 ---
 
+### Data Source
+1. WeakAura Dependency:
+  - Epos Raid Tools only collects and displays data that is broadcast by a compatible WeakAura.
+  - All raid members must have the specified WeakAura installed and enabled for EposRT to gather their data.
+  - You can find the WeakAura used by this addon here: https://wago.io/6PHcVWmPg
+
+2. Data Format:
+   - When Request Data is clicked, the addon listens for EPOSDATABASE messages and expects payloads containing: Data (See Section Below)
+   - Without the WeakAura sending this table, no data will appear in the tabs.
+  
+---
+
 ## Requesting & Receiving Data
 
-- Whenever you click **Request Data** (in either the Roster or Crests tab), Epos Raid Tools broadcasts an AceComm message on channel `“EPOSDATABASE”`.
+- Whenever you click **Request Data**, Epos Raid Tools broadcasts an AceComm message on channel `“EPOSDATABASE”`.
 - Any other player running Epos Raid Tools who receives that message will respond with:
   ```lua
   {
-    name           = "Player-Realm",
-    class          = "DEATHKNIGHT",
-    currency = {
-        ...C_CurrencyInfo.GetCurrencyInfo(PAYLOAD_IDS)
-    },
-     weakauras = {
-        ...WeakAuras.GetData(PAYLOAD_IDS)
-     }
-     addons = {
-      ...GetAddOnMetadata(PAYLOAD_IDS)
-     }
-    timestamp      = <Unix epoch>,
+    name           = "Bluupriest-Blackhand",
+    class          = "Priest",
+    currency       = { ...C_CurrencyInfo.GetCurrencyInfo(PAYLOAD_IDS) },
+    weakauras      = { ...WeakAuras.GetData(PAYLOAD_IDS) },
+    addons         = { ...GetAddOnMetadata(PAYLOAD_IDS) },
+    timestamp      = <Unix>,
   }
