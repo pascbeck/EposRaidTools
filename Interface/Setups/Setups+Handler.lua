@@ -259,7 +259,7 @@ function Epos:ProcessRoster ()
 
     if EposRT.Settings.AnnounceUnBenchedPlayers then
         local index = EposRT.Setups.Current.Boss:match("^(%d+)")
-        local _, _, _, _, link = EJ_GetEncounterInfoByIndex(index, 1296)
+        local _, _, _, _, link = EJ_GetEncounterInfoByIndex(index, EposRT.Settings.Default.JournalEncounter)
 
         if next(EposRT.Setups.Old.Setup.benched or {}) then
             local currentBenchedSet = {}
@@ -297,7 +297,7 @@ function Epos:ProcessRoster ()
 
     if EposRT.Settings.AnnounceBenchedPlayers then
         local index = EposRT.Setups.Current.Boss:match("^(%d+)")
-        local _, _, _, _, link = EJ_GetEncounterInfoByIndex(index, 1296)
+        local _, _, _, _, link = EJ_GetEncounterInfoByIndex(index, EposRT.Settings.Default.JournalEncounter)
 
         if EposRT.Settings.AnnouncementChannel == "WHISPER" then
             local msgMap = {}

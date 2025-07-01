@@ -130,6 +130,10 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
             EposRT.readyCheckStarted = false
             EposRT.readyCheckExpected = {}
             EposRT.readyCheckEvaluated = false
+
+            -- default value for raid encounter
+            EposRT.Settings.Default = EposRT.Settings.Default or {}
+            EposRT.Settings.Default.JournalEncounter = EposRT.Settings.Default.JournalEncounter or 1296
         end
 
 
