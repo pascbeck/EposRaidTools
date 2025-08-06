@@ -80,9 +80,7 @@ function Epos:FetchGuild()
         ["Officer Alt"] = true,
         ["Raider"] = true,
         ["Raid Alt"] = true,
-        ["Trial"] = true,
-		["Alt"] = true,
-		
+        ["Trial"] = true,		
     }
 
     for index = 1, totalMembers do

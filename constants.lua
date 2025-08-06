@@ -73,8 +73,7 @@ local GUILD_RANKS = {
     "Raider",
     "Raid Alt",
     "Trial",
-	"Alt",
-}
+	}
 
 --- Combine into Epos.Constants
 Epos.Constants = {
