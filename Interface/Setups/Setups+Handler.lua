@@ -278,7 +278,7 @@ function Epos:ProcessRoster ()
                 if EposRT.Settings.AnnouncementChannel == "WHISPER" then
                     local msgMap = {}
                     for _, name in ipairs(unbenched) do
-                        msgMap[name] = "YOU ARE IN FOR: " .. link
+                        msgMap[name] = "You are in for: " .. link
                     end
                     QueueWhispers(msgMap)
                 else
