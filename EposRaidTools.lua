@@ -80,21 +80,46 @@ function Epos:FetchGuild()
         ["Officer Alt"] = true,
         ["Raider"] = true,
         ["Raid Alt"] = true,
-        ["Trial"] = true,
+        ["Trial"] = true,		
     }
 
     for index = 1, totalMembers do
-        local fullName, rankName, _, level, _, _, _, _, _, _, classFile = GetGuildRosterInfo(index)
-        if fullName and level == maxLevel and allowedRanks[rankName] then
-            -- Only include characters at max level and with allowed ranks
-            EposRT.GuildRoster.Players[fullName] = {
-                name = fullName,
+        local fullName, rankName, _, level, _, _, _, _, _, _, class = GetGuildRosterInfo(index)
+		local name=Epos:CleanFullPlayerName(fullName)
+		        if name and level == maxLevel and allowedRanks[rankName] then
+				            -- Only include characters at max level and with allowed ranks
+            EposRT.GuildRoster.Players[name] = {
+                name = name,
                 rank = rankName,
                 level = level,
-                class = classFile,
+                class = class,
             }
         end
     end
+end
+
+function Epos:CleanFullPlayerName(fullName)
+    if not fullName then return nil end
+
+    local parts = { strsplit("-", fullName) }
+    local name = parts[1]
+    local realm = parts[2]
+
+    -- Only use second element as realm if all realms are duplicates
+    if #parts > 2 then
+        local isDuplicate = true
+        for i = 3, #parts do
+            if parts[i] ~= realm then
+                isDuplicate = false
+                break
+            end
+        end
+        if isDuplicate then
+            return name .. "-" .. realm
+        end
+    end
+
+    return fullName -- fallback: return as-is
 end
 
 function Epos:RequestData(event, channel, sender, skip)

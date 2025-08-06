@@ -136,9 +136,10 @@ function BuildCrestsInterface(parent)
                 local currency = currencies[current]
 
                 if currency then
-                    local available = currency.quantity or 0
-                    local obtainable = currency.canEarnPerWeek and (currency.maxQuantity - currency.totalEarned) or "Infinite"
-                    local used = (currency.totalEarned or 0) - available
+                    local available = currency.quantity or 0				
+                    local obtainable = (currency.maxQuantity - currency.totalEarned)
+					local used = math.max(0, (currency.totalEarned or 0) - math.min(currency.quantity or 0, currency.maxQuantity or 0))
+                    --local used = (currency.totalEarned or 0) - available
                     local totalEarned = currency.totalEarned or 0
                     local tsText = playerDatabaseEntry.timestamp and date("%d.%m - %H:%M Uhr", playerDatabaseEntry.timestamp) or "-"
 
@@ -153,7 +154,9 @@ function BuildCrestsInterface(parent)
                             rank = player.rank,
                             class = player.class,
                             timestamp = tsText,
-                        })
+							max=currency.maxQuantity
+
+						})
                     end
                 end
             end
@@ -188,7 +191,7 @@ function BuildCrestsInterface(parent)
                 line.crestsUsed:SetText(player.crestsUsed)
 
                 -- Total Earned
-                line.crestsTotalEarned:SetText(player.crestsTotalEarned)
+                line.crestsTotalEarned:SetText(string.format("%d / %d", player.crestsTotalEarned or 0, player.max or 0))
 
                 -- Updated timestamp
                 line.updated:SetText(player.timestamp)

@@ -79,23 +79,23 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
 
             -- Crests
             EposRT.Crests.Fetch = EposRT.Crests.Fetch or {
-                3107,
-                3108,
-                3109,
-                3110
+                3284,
+                3286,
+                3288,
+                3290,
             }
-            EposRT.Crests.Current = EposRT.Crests.Current or 3110
+            EposRT.Crests.Current = EposRT.Crests.Current or 3290
 
             -- WeakAuras
             EposRT.WeakAuras.Fetch = EposRT.WeakAuras.Fetch or {
                 "Epos Database",
                 "Interrupt Anchor",
                 "Kaze MRT Timers",
-                "Liberation of Undermine",
-                "Northern Sky Liberation of Undermine",
+                "Northern Sky Manaforge Omega",
+				"NS WeakAura Anchors (do not rename)",				
                 "RaidBuff Reminders",
-                "WeakAura Anchors (don't rename these)"
-            }
+		
+			}
             EposRT.WeakAuras.Current = EposRT.WeakAuras.Current or "Epos Database"
 
             -- AddOns
@@ -104,6 +104,8 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
                 "NorthernSkyRaidTools",
                 "Details",
                 "EposRaidTools",
+				"BigWigs",
+				"RcLootCouncil",
             }
             EposRT.AddOns.Current = EposRT.AddOns.Current or "MRT"
 
@@ -133,7 +135,7 @@ function Epos:HandleEvent(eventName, isWoWEvent, isInternal, ...)
 
             -- default value for raid encounter
             EposRT.Settings.Default = EposRT.Settings.Default or {}
-            EposRT.Settings.Default.JournalEncounter = EposRT.Settings.Default.JournalEncounter or 1296
+            EposRT.Settings.Default.JournalEncounter = EposRT.Settings.Default.JournalEncounter or 1302
         end
 
 
