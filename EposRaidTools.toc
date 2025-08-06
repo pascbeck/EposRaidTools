@@ -1,8 +1,8 @@
-## Interface: 110107
+## Interface: 110200
 ## Title: |cFF78A8FFEpos Raid Tools|r
-## Version:  1.0.4
+## Version:  1.0.5
 ## IconTexture: Interface\AddOns\EposRaidTools\Media\EposLogo.blp
-## Author: Bluu
+## Author: Bluu, Thengil
 ## DefaultState: Enable
 ## Dependencies: WeakAuras
 ## SavedVariables: EposRT

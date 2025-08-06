@@ -56,14 +56,14 @@ local TABS = {
 }
 
 local BOSS_ICONS = {
-    6392628,
-    6253176,
-    6392625,
-    6392627,
-    6392626,
-    6392624,
-    6392623,
-    6392621
+    6922080,
+    6922087,
+    6922081,
+    6922084,
+    6922082,
+    6922085,
+    6922086,
+    6922083
 }
 
 local GUILD_RANKS = {
@@ -73,6 +73,7 @@ local GUILD_RANKS = {
     "Raider",
     "Raid Alt",
     "Trial",
+	"Alt",
 }
 
 --- Combine into Epos.Constants

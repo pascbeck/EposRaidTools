@@ -57,14 +57,14 @@ function BuildSetupsInterfaceOptions()
         local data = {}
 
         local bossIcons = {
-            ["1 Vexie Fullthrottle and The Geargrinders"] = 6392628,
-            ["2 Cauldron of Carnage"] = 6253176,
-            ["3 Rik Reverb"] = 6392625,
-            ["4 Stix Bunkjunker"] = 6392627,
-            ["5 Sprocketmonger Lockenstock"] = 6392626,
-            ["6 The One-Armed Bandit"] = 6392624,
-            ["7 Mug'Zee"] = 6392623,
-            ["8 Chrome King Gallywix"] = 6392621,
+            ["1 Plexus Sentinel"] = 6922080,
+            ["2 Loom'ithar"] = 6922087,
+            ["3 Soulbinder Naazindhri"] = 6922081,
+            ["4 Forgeweaver Araz"] = 6922084,
+            ["5 The Soul Hunters"] = 6922082,
+            ["6 Fractillus"] = 6922085,
+            ["7 Nexus-King Salhadaar"] = 6922086,
+            ["8 Dimensius"] = 6922083,
         }
 
         for boss, setup in pairs(EposRT.Setups.JSON) do
